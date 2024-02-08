@@ -94,6 +94,7 @@ def transform_frame(frame):
 
 # Covnerts label to tensor
 # Since labels contain the coordinates of the face speaking and the actual label
+# all values need to be of the same type
 def convert_label_to_tensor(label):
     if label[-1] == 'NOT_SPEAKING':
         label[-1]  = 0
