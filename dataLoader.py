@@ -52,7 +52,7 @@ class Train_Loader(Dataset):
         label = np.array(self.labels.iloc[index, 2:-1])
 
         # Return frames and labels as tensors
-        return {'frame' : torch.from_numpy(frame), 'label' : convert_label_to_tensor(label)}
+        return torch.from_numpy(frame), convert_label_to_tensor(label)
 
     # Since we are not using every frame from the data and only the first x frames
     # Also intrduce columns for easier indexing
@@ -60,6 +60,7 @@ class Train_Loader(Dataset):
         labels = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv').iloc[:400]
         labels.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         return labels
+
 
 class Val_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
@@ -85,7 +86,7 @@ class Val_Loader(Dataset):
         # we can ignore first and last items as they are ids
         label = np.array(self.labels.iloc[index, 2:-1])
 
-        return frame
+        return torch.from_numpy(frame)
 
     def __len__(self):
         return len(self.labels)
@@ -94,7 +95,7 @@ class Val_Loader(Dataset):
 
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
-    H = 112
+    H = 200
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     frame = cv2.resize(frame, (H, H))
     return frame
@@ -139,7 +140,7 @@ def show_labels(frame, label):
 
 if __name__ == "__main__":
     ds = Train_Loader(video_id='_mAfwH6i90E')
-    sample = ds.__getitem__(198)
+    frame, label = ds.__getitem__(198)
     # print(sample)
-    show_labels(sample['frame'], sample['label'])
+    # show_labels(frame, label)
     # print(ds.labels)
