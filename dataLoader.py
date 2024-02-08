@@ -45,6 +45,7 @@ class Train_Loader(Dataset):
         frame_name = f'{self.video_id}_{self.labels.iloc[index]["Timestamp"]}.jpg'
         frame = cv2.imread(f'dataset/{self.root_dir}/{frame_name}')
 
+        # Transform frame (recaling and Grayscale)
         frame = transform_frame(frame)
 
         # we can ignore first and last items as they are ids
@@ -53,7 +54,8 @@ class Train_Loader(Dataset):
         # Return frames and labels as tensors
         return {'frame' : torch.from_numpy(frame), 'label' : convert_label_to_tensor(label)}
 
-    # Since we are not using every frame from the data and only the first 300 frames
+    # Since we are not using every frame from the data and only the first x frames
+    # Also intrduce columns for easier indexing
     def prep_labels(self):
         labels = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv').iloc[:400]
         labels.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
@@ -84,6 +86,11 @@ class Val_Loader(Dataset):
         label = np.array(self.labels.iloc[index, 2:-1])
 
         return frame
+
+    def __len__(self):
+        return len(self.labels)
+
+
 
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
