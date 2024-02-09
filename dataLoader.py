@@ -117,17 +117,18 @@ def convert_label_to_tensor(label):
 # Frame must be converted to a numpy array 
 def show_labels(frame, label):
     frame = frame.numpy()
+    label = label.numpy()
     y_dims, x_dims = frame.shape[:2]
     x1, y1 = (label[0], label[1])
     x2, y2 = (label[2], label[3])
-    speak = label[4]
+    speak = label[-1]
 
     x1 = round(float(x1)*x_dims)
     y1 = round(float(y1)*y_dims)
     x2 = round(float(x2)*x_dims)
     y2 = round(float(y2)*y_dims)
 
-    if speak == 'NOT_SPEAKING':
+    if speak == 0:
         c = (0,0,255)
     else:
         c = (0,255,0)
