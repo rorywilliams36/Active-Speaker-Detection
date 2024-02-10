@@ -49,7 +49,7 @@ class Train_Loader(Dataset):
         frame = transform_frame(frame)
 
         # we can ignore first and last items as they are ids
-        label = np.array(self.labels.iloc[index, 2:-1])
+        label = np.array(self.labels.iloc[index, 1:-1])
 
         # Return frames and labels as tensors
         return torch.from_numpy(frame), convert_label_to_tensor(label)
@@ -91,12 +91,10 @@ class Val_Loader(Dataset):
     def __len__(self):
         return len(self.labels)
 
-
-
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
-    H = 200
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    H = 300
+    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     frame = cv2.resize(frame, (H, H))
     return frame
 
@@ -113,35 +111,10 @@ def convert_label_to_tensor(label):
 
     return torch.from_numpy(label)
 
-# Displays the frame and label on the image
-# Frame must be converted to a numpy array 
-def show_labels(frame, label):
-    frame = frame.numpy()
-    label = label.numpy()
-    y_dims, x_dims = frame.shape[:2]
-    x1, y1 = (label[0], label[1])
-    x2, y2 = (label[2], label[3])
-    speak = label[-1]
-
-    x1 = round(float(x1)*x_dims)
-    y1 = round(float(y1)*y_dims)
-    x2 = round(float(x2)*x_dims)
-    y2 = round(float(y2)*y_dims)
-
-    if speak == 0:
-        c = (0,0,255)
-    else:
-        c = (0,255,0)
-
-    cv2.rectangle(frame, (x1, y1), (x2, y2), color=c)
-    cv2.imshow('frame', frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
 
 if __name__ == "__main__":
     ds = Train_Loader(video_id='_mAfwH6i90E')
     frame, label = ds.__getitem__(198)
     # print(sample)
-    # show_labels(frame, label)
+    show_labels(frame, label)
     # print(ds.labels)
