@@ -4,6 +4,10 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
+current_path = os.getcwd()
+current_path = '\\'.join(current_path.split('\\')[:-1])
+ALL_TRAIN_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
+
 # Displays the frame and label on the image
 # Frame must be converted to a numpy array 
 def show_labels(frame, label):
@@ -50,30 +54,3 @@ def plot_faces_detected(frame, faces):
     cv2.destroyAllWindows()
 
 
-
-# Converts and saves the video as a series of frames/images
-def split_into_frames(video_id):
-    current_path = os.getcwd()
-    output = f'/dataset/{video_id}'
-    cap = cv2.VideoCapture(f'{current_path}/dataset/{video_id}.mkv')
-
-    if not os.path.exists(f'{current_path}/{output}'):
-        os.makedirs(f'{current_path}/{output}')
-
-    while True:
-        ret, frame = cap.read()
-        timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)	
-
-        if ret:
-            if timestamp >= 900000 and timestamp < 912000:
-                norm_time = round((timestamp / 1000), 2) # Converts milliseconds to seconds ot match the timestamps in the labels
-                cv2.imwrite(f'{current_path}/{output}/{video_id}_{norm_time}.jpg', frame)
-                    
-            if timestamp > 912000:
-                break
-
-        else:
-            print('Error occured whilst prepping video')
-            break
-
-    cap.release()
