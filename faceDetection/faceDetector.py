@@ -1,5 +1,6 @@
 '''
-Uses OpenCV's DNN module and the DNN face detector which can be found here:
+Face Detection Model
+Uses OpenCV's DNN (Deep Neural Network) module and the DNN face detector caffe model which can be found here:
 https://github.com/opencv/opencv/tree/master/samples/dnn
 
 '''
@@ -25,7 +26,7 @@ class FaceDetection():
         # Performs forward pass on the frame and returns array of detected faces
         # returns array in shape (1, 1, num_faces_detected, 7)
         # where we are interested in last 7 = [_, _, confidence_score, x1, y1, x2, y2]
-        # Where the coordinates are normalised to frame size 
+        # coordinates are normalised to frame size 
         faces = self.face_detector.forward()
         num_faces = faces.shape[2]
 
