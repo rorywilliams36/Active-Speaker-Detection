@@ -9,7 +9,7 @@ from torchvision import transforms, utils
 current_path = os.getcwd()
 ID_LIST = open(f'{current_path}/dataset/ava_speech_file_names_v1.txt', 'r')
 ALL_TRAIN_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
-TEST_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
+TEST_LABELS = f'{current_path}/dataset/ava_activespeaker_val_v1.0/'
 
 class Train_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'train'):
@@ -27,20 +27,6 @@ class Train_Loader(Dataset):
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
-        
-        '''Each frame is named after the video_id followed by the timestamp in seconds
-        Due to OpenCV's method of tracking the time compared to the dataset's labelling
-        We ammend the labels to correspond to the correct file (this is mainly due to different methods of rounding)
-        Gets corresponding frame file from the label timestamp '''
-
-        timestamp = self.labels.iloc[index]["Timestamp"]
-        if not os.path.exists(f'{self.data_path}/{self.video_id}_{timestamp}.jpg'):
-            if os.path.exists(f'{self.data_path}/{self.video_id}_{timestamp - 0.01}.jpg'):
-                self.labels.at[index, "Timestamp"] -= 0.01
-            elif os.path.exists(f'{self.data_path}/{self.video_id}_{timestamp + 0.01}.jpg'):
-                self.labels.at[index, "Timestamp"] += 0.01
-            else:
-                return None
             
         frame_name = f'{self.video_id}_{self.labels.iloc[index]["Timestamp"]}.jpg'
         frame = cv2.imread(f'dataset/{self.root_dir}/{frame_name}')
@@ -57,7 +43,7 @@ class Train_Loader(Dataset):
     # Since we are not using every frame from the data and only the first x frames
     # Also intrduce columns for easier indexing
     def prep_labels(self):
-        labels = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv').iloc[:400]
+        labels = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv').iloc[:500]
         labels.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         return labels
 
@@ -70,15 +56,6 @@ class Val_Loader(Dataset):
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
-        
-        timestamp = self.labels.iloc[index]["Timestamp"]
-        if not os.path.exists(f'{self.data_path}/{self.video_id}_{timestamp}.jpg'):
-            if os.path.exists(f'{self.data_path}/{self.video_id}_{timestamp - 0.01}.jpg'):
-                self.labels.at[index, "Timestamp"] -= 0.01
-            elif os.path.exists(f'{self.data_path}/{self.video_id}_{timestamp + 0.01}.jpg'):
-                self.labels.at[index, "Timestamp"] += 0.01
-            else:
-                return None
             
         frame_name = f'{self.video_id}_{self.labels.iloc[index]["Timestamp"]}.jpg'
         frame = cv2.imread(f'dataset/{self.root_dir}/{frame_name}')
