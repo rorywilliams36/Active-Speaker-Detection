@@ -5,9 +5,8 @@ https://github.com/opencv/opencv/tree/master/samples/dnn
 
 '''
 
-import cv2
+import os, cv2
 import numpy as np
-import os
 
 path = os.getcwd()
 path = os.path.join(path, 'faceDetection/model')
