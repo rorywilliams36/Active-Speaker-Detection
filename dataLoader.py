@@ -51,15 +51,16 @@ class Train_Loader(Dataset):
     # Since we are not using every frame from the data and only the first x frames
     # Also intrduce columns for easier indexing
     def prep_labels(self):
+        # Gets the last frame recorded
         frame_name = (self.frames[-1]).split('/')[-1].split('\\')[-1]
         last = float(frame_name.split('_')[-1].split('.jpg')[0])
 
+        # Read csv file and create columns
         labels_df = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv')
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
 
         # slice to the last frame recorded
         spliced_labels = labels_df.loc[labels_df['Timestamp'] <= last]
-        # spliced_labels = spliced_labels[1:-1]  
 
         return spliced_labels
             
@@ -67,7 +68,6 @@ class Train_Loader(Dataset):
 class Val_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
         Train_Loader.__init__()
-
 
     # Returns number of items in dataset
     def __len__(self):
@@ -106,6 +106,18 @@ def transform_frame(frame):
     frame = cv2.resize(frame, (H, H))
     return frame
 
+# Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
+def create_labels_dict(labels):
+    label_dict = {}
+    for label in p_labels:
+        if label[0] not in label_dict:
+            label_dict[label[0]] = label
+        else:
+            label_dict[label[0]] = [label_dict[label[0]], [label]]
+    
+    return label_dict
+
+
 # Converts each label for the timestamp to tensor
 # Since labels contain the coordinates of the face speaking and the actual label
 # all values need to be of the same type
@@ -121,17 +133,6 @@ def convert_label_to_tensor(labels):
             labels[time][i] = labels[time][i].toTensor()
 
     return labels
-
-# Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
-def create_labels_dict(labels):
-    label_dict = {}
-    for label in p_labels:
-        if label[0] not in label_dict:
-            label_dict[label[0]] = label
-        else:
-            label_dict[label[0]] = [label_dict[label[0]], [label]]
-    
-    return label_dict
 
 
 if __name__ == "__main__":
