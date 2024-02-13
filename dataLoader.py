@@ -1,8 +1,6 @@
-import os
-import cv2
+import os, cv2, torch, glob
 import pandas as pd
 import numpy as np 
-import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
@@ -16,11 +14,13 @@ class Train_Loader(Dataset):
         self.root_dir = root_dir # directory holding the data/frames
         self.data_path = os.path.join(f'{current_path}/dataset', self.root_dir) # path to respective dataset folder
         self.video_id = video_id
+        self.frames = glob.glob(f"{self.data_path}/*.jpg")
         self.labels = self.prep_labels()
 
     # Returns number of items in dataset
     def __len__(self):
-        return len(self.labels)
+        # return len(self.labels.drop_duplicates(subset=['Timestamp']))
+        return len(self.frames)
 
     # Returns a certain point from dataset
     # Gets a example image from dataset given a index
@@ -28,14 +28,22 @@ class Train_Loader(Dataset):
         if torch.is_tensor(index):
             index = index.tolist()
             
-        frame_name = f'{self.video_id}_{self.labels.iloc[index]["Timestamp"]}.jpg'
-        frame = cv2.imread(f'dataset/{self.root_dir}/{frame_name}')
+        # Gets indexed frame
+        frame = self.frames[index]
+
+        # Gets frame name and timestamp from the file naem
+        frame_name = frame.split('/')[-1].split('\\')[-1]
+        timestamp = float(frame_name.split('_')[-1].split('.jpg')[0])
+        frame = cv2.imread(frame)
+
+        # Gets corresponding label from the timestamp
+        # Also remove irrelevant ids/values from label
+        p_labels = np.array(self.labels.loc[self.labels['Timestamp'] == timestamp])[:, 1:-1]
+        # Get dict of labels
+        label = create_labels_dict(p_labels)
 
         # Transform frame (recaling and Grayscale)
         frame = transform_frame(frame)
-
-        # we can ignore first and last items as they are ids
-        label = np.array(self.labels.iloc[index, 1:-1])
 
         # Return frames and labels as tensors
         return torch.from_numpy(frame), convert_label_to_tensor(label)
@@ -43,10 +51,18 @@ class Train_Loader(Dataset):
     # Since we are not using every frame from the data and only the first x frames
     # Also intrduce columns for easier indexing
     def prep_labels(self):
-        labels = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv').iloc[:500]
-        labels.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
-        return labels
+        frame_name = (self.frames[-1]).split('/')[-1].split('\\')[-1]
+        last = float(frame_name.split('_')[-1].split('.jpg')[0])
 
+        labels_df = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv')
+        labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
+
+        # slice to the last frame recorded
+        spliced_labels = labels_df.loc[labels_df['Timestamp'] <= last]
+        # spliced_labels = spliced_labels[1:-1]  
+
+        return spliced_labels
+            
 
 class Val_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
@@ -75,23 +91,44 @@ def transform_frame(frame):
     frame = cv2.resize(frame, (H, H))
     return frame
 
-# Covnerts label to tensor
+# Converts each label for the timestamp to tensor
 # Since labels contain the coordinates of the face speaking and the actual label
 # all values need to be of the same type
-def convert_label_to_tensor(label):
-    if label[-1] == 'NOT_SPEAKING':
-        label[-1]  = 0
-    else:
-        label[-1]  = 1  
+def convert_label_to_tensor(labels):
+    labels = {}
+    for time in labels:
+        for i in labels[time]:
+            if labels[time][i][-1] == 'NOT_SPEAKING':
+                labels[time][i][-1]  = 0
+            else:
+                labels[time][i][-1]  = 1  
+            
+            labels[time][i] = labels[time][i].toTensor()
 
-    label = np.array(label, dtype=float)
+    return labels
 
-    return torch.from_numpy(label)
+# Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
+def create_labels_dict(labels):
+    label_dict = {}
+    for label in p_labels:
+        if label[0] not in label_dict:
+            label_dict[label[0]] = label
+        else:
+            label_dict[label[0]] = [label_dict[label[0]], [label]]
+    
+    return label_dict
+
 
 
 if __name__ == "__main__":
-    ds = Train_Loader(video_id='_mAfwH6i90E')
-    frame, label = ds.__getitem__(198)
+    # ds = Train_Loader(video_id='_mAfwH6i90E')
+    ds = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
     # print(sample)
-    show_labels(frame, label)
+    print(ds.__len__())
+    print(len(ds.frames))
+    print(len(ds.labels))
+    # for i in range(len(ds.frames)):
+    #     print(ds.__getitem__(i))
+
+    # show_labels(frame, label)
     # print(ds.labels)
