@@ -68,21 +68,36 @@ class Val_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
         Train_Loader.__init__()
 
+
+    # Returns number of items in dataset
+    def __len__(self):
+        return len(self.frames)
+
+    # Returns a certain point from dataset
     # Gets a example image from dataset given a index
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
             
-        frame_name = f'{self.video_id}_{self.labels.iloc[index]["Timestamp"]}.jpg'
-        frame = cv2.imread(f'dataset/{self.root_dir}/{frame_name}')
-        
-        # we can ignore first and last items as they are ids
-        label = np.array(self.labels.iloc[index, 2:-1])
+        # Gets indexed frame
+        frame = self.frames[index]
 
-        return torch.from_numpy(frame)
+        # Gets frame name and timestamp from the file naem
+        frame_name = frame.split('/')[-1].split('\\')[-1]
+        timestamp = float(frame_name.split('_')[-1].split('.jpg')[0])
+        frame = cv2.imread(frame)
 
-    def __len__(self):
-        return len(self.labels)
+        # Gets corresponding label from the timestamp
+        # Also remove irrelevant ids/values from label
+        p_labels = np.array(self.labels.loc[self.labels['Timestamp'] == timestamp])[:, 1:-1]
+        # Get dict of labels
+        label = create_labels_dict(p_labels)
+
+        # Transform frame (recaling and Grayscale)
+        frame = transform_frame(frame)
+
+        # Return frames and labels as tensors
+        return torch.from_numpy(frame), convert_label_to_tensor(label)
 
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
@@ -117,7 +132,6 @@ def create_labels_dict(labels):
             label_dict[label[0]] = [label_dict[label[0]], [label]]
     
     return label_dict
-
 
 
 if __name__ == "__main__":
