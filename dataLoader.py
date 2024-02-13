@@ -119,7 +119,7 @@ def transform_frame(frame):
 # Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
 def create_labels_dict(labels):
     label_dict = {}
-    for label in p_labels:
+    for label in labels:
         if label[0] not in label_dict:
             label_dict[label[0]] = label
         else:
