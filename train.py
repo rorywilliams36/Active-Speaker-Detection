@@ -1,6 +1,4 @@
-import os
-import argparse
-import cv2
+import os, argparse, cv2, glob
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -8,7 +6,11 @@ from torch.utils.data import Dataset, DataLoader
 
 from dataLoader import Train_Loader, Val_Loader
 from model import ActiveSpeaker
+from evaulation import *
 from utils import tools
+
+path = os.getcwd()
+frames = glob.glob(f"{path}/dataset/train/*.jpg")
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
@@ -21,11 +23,21 @@ def main():
     # parser.add_argument('--test_dir', type=str, default='test', help="Data path for the testing data")
     # args = parser.parse_args()
 
-    trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
-    trainLoader = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=False)
-    train_features, train_labels = next(iter(trainLoader))
-    asd = ActiveSpeaker(frame = train_features[60])
-    asd.model()
+    # trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
+    trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
+    trainLoader = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
+
+    num = 0
+    for images, labels in trainLoader:
+        for i in range(len(images)):
+            asd = ActiveSpeaker(images[i])
+            faces = asd.model()
+            # print(i)
+            # if num % 75 == 0:
+            #     tools.plot_faces_detected(images[i].numpy(), faces)
+
+
+        # print(count, '/', trainLoader.__len__())
 
     # print(f"Feature batch shape: {train_features.size()}")
     # print(f"Labels batch shape: {train_labels.size()}")
