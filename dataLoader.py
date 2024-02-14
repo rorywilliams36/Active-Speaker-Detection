@@ -112,18 +112,19 @@ class Val_Loader(Dataset):
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
     H = 300
-    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # convert image from RGB to HSV
-    img_hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
-
-    # Histogram equalisation on the V-channel
-    img_hsv[:, :, 2] = cv2.equalizeHist(img_hsv[:, :, 2])
-
-    # convert image back from HSV to RGB
-    frame = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
-    # frame = cv2.GaussianBlur(frame, (5,5), 0)
+    # frame = gamma_correction(frame)
+    frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=3)
     frame = cv2.resize(frame, (H, H))
     return frame
+
+def gamma_correction(frame):
+    gamma = 0.75
+    lookUpTable = np.empty((1,256), np.uint8)
+    for i in range(256):
+        lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
+    res = cv2.LUT(frame, lookUpTable)
+
+    return res
 
 # Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
 def create_labels_dict(labels):
