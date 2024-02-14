@@ -50,7 +50,7 @@ class Train_Loader(Dataset):
         # Get dict of labels
         label = create_labels_dict(p_labels)
 
-        # Transform frame (recaling and Grayscale)
+        # Transform frame (rescaling and Grayscale)
         frame = transform_frame(frame)
 
         # Return frames and labels as tensors
@@ -113,6 +113,15 @@ class Val_Loader(Dataset):
 def transform_frame(frame):
     H = 300
     # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # convert image from RGB to HSV
+    img_hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+
+    # Histogram equalisation on the V-channel
+    img_hsv[:, :, 2] = cv2.equalizeHist(img_hsv[:, :, 2])
+
+    # convert image back from HSV to RGB
+    frame = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+    # frame = cv2.GaussianBlur(frame, (5,5), 0)
     frame = cv2.resize(frame, (H, H))
     return frame
 
@@ -126,7 +135,6 @@ def create_labels_dict(labels):
             label_dict[label[0]] = [label_dict[label[0]], [label]]
     
     return label_dict
-
 
 # Converts each label for the timestamp to tensor
 # Since labels contain the coordinates of the face speaking and the actual label
