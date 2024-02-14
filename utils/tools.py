@@ -31,7 +31,6 @@ def show_labels(frame, labels):
 
 # Shows frame without label
 def plot_frame(frame):
-
     # Scales frame up if frame is too small
     if frame.shape[0] < 100 or frame.shape[1] < 100:
         frame = cv2.resize(frame, (150, 150))

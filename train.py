@@ -19,12 +19,16 @@ def main():
     # parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     
     # parser.add_argument('--evaluate', type=bool, default=False, help="Perform Evaluation (True/False)")
+    # parser.add_argument('--dataset', type=str, default='AVA Active Speaker Dataset', help="Type of dataset to test and train")
+
     # parser.add_argument('--train_dir', type=str, default='train', help="Data path for the training data")
     # parser.add_argument('--test_dir', type=str, default='test', help="Data path for the testing data")
+    # parser.add_argument('--CUDA', type=bool, default=False, help="Whether to run code on GPU is available")
+
     # args = parser.parse_args()
 
-    # trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
-    trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
+    trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
+    # trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
     trainLoader = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
 
     num = 0
@@ -33,17 +37,10 @@ def main():
             asd = ActiveSpeaker(images[i])
             faces = asd.model()
             # print(i)
-            # if num % 75 == 0:
+            # if num % 100 == 0:
             #     tools.plot_faces_detected(images[i].numpy(), faces)
 
-
-        # print(count, '/', trainLoader.__len__())
-
-    # print(f"Feature batch shape: {train_features.size()}")
-    # print(f"Labels batch shape: {train_labels.size()}")
-
-    # val_loader = Val_Loader()
-
+            num += 1
 
 if __name__ == "__main__":
     main()

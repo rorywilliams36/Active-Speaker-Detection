@@ -1,7 +1,5 @@
 
-import cv2
-import os
-import subprocess
+import os, cv2, subprocess
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -11,7 +9,7 @@ current_path = '\\'.join(current_path.split('\\')[:-1])
 ALL_TRAIN_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
 
 URL = 'https://s3.amazonaws.com/ava-dataset/trainval/'
-train_files = ['B1MAUxpKaV8.mkv', 'CZ2NP8UsPuE.mkv', '55Ihr6uVIDA.mkv']
+train_files = ['B1MAUxpKaV8.mkv', 'CZ2NP8UsPuE.mkv', '55Ihr6uVIDA.mkv', '4gVsDd8PV9U.mp4']
 
 # Converts and saves the video as a series of frames/images
 def split_into_frames(video_id):
@@ -20,6 +18,7 @@ def split_into_frames(video_id):
 
     output = f'/dataset/{video_id}'
     cap = cv2.VideoCapture(f'{current_path}/dataset/{video_id}.mkv')
+    cap.set(cv2.CAP_PROP_FPS, 20)
 
     if not os.path.exists(f'{current_path}/{output}'):
         os.makedirs(f'{current_path}/{output}')
@@ -73,5 +72,6 @@ def download_files(file_urls, output_directory):
 
 
 if __name__ == "__main__":
-    split_into_frames('_mAfwH6i90E')
+    # split_into_frames('_mAfwH6i90E')
+    split_into_frames('B1MAUxpKaV8')
     # download_files(f'{URL}/{train_files[0]}', 'B1MAUxpKaV8')
