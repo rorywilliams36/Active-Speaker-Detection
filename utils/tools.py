@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
-# Displays the frame and label on the image
+# Displays the frame and given label on the image
 # Frame must be converted to a numpy array 
 def show_labels(frame, labels):
     y_dims, x_dims = frame.shape[:2]
@@ -24,16 +24,23 @@ def show_labels(frame, labels):
             c = (0,255,0)
 
         cv2.rectangle(frame, (x1, y1), (x2, y2), color=c)
-        
+
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 # Shows frame without label
-def show_frame(frame):
-    plt.imshow(frame)
-    plt.show()
+def plot_frame(frame):
 
+    # Scales frame up if frame is too small
+    if frame.shape[0] < 100 or frame.shape[1] < 100:
+        frame = cv2.resize(frame, (150, 150))
+
+    cv2.imshow('frame', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Plots bounding boxes on faces
 def plot_faces_detected(frame, faces):
     h, w = frame.shape[:2]
 
@@ -46,6 +53,15 @@ def plot_faces_detected(frame, faces):
         
         # Draw a rectangle around the face
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+    cv2.imshow('frame', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Plots single bounding box from coords
+def plot_box(frame, coords):
+    x1, y1, x2, y2 = coords[:]
+    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
