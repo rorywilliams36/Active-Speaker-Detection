@@ -1,31 +1,30 @@
-import os, cv2
+import cv2
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
-current_path = os.getcwd()
-current_path = '\\'.join(current_path.split('\\')[:-1])
-ALL_TRAIN_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
-
 # Displays the frame and label on the image
 # Frame must be converted to a numpy array 
-def show_labels(frame, label):
+def show_labels(frame, labels):
     y_dims, x_dims = frame.shape[:2]
-    x1, y1 = (label[1], label[2])
-    x2, y2 = (label[3], label[4])
-    speak = label[-1]
+    for i in labels:
 
-    x1 = round(float(x1)*x_dims)
-    y1 = round(float(y1)*y_dims)
-    x2 = round(float(x2)*x_dims)
-    y2 = round(float(y2)*y_dims)
+        x1, y1 = (labels[i][1], labels[i][1])
+        x2, y2 = (labels[i][1], labels[i][1])
+        speak = labels[i][1]
 
-    if speak == 0:
-        c = (0,0,255)
-    else:
-        c = (0,255,0)
+        x1 = round(float(x1)*x_dims)
+        y1 = round(float(y1)*y_dims)
+        x2 = round(float(x2)*x_dims)
+        y2 = round(float(y2)*y_dims)
 
-    cv2.rectangle(frame, (x1, y1), (x2, y2), color=c)
+        if speak == 0:
+            c = (0,0,255)
+        else:
+            c = (0,255,0)
+
+        cv2.rectangle(frame, (x1, y1), (x2, y2), color=c)
+        
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
