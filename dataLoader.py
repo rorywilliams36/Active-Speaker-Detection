@@ -72,6 +72,8 @@ class Train_Loader(Dataset):
 
         return spliced_labels
             
+    def extract_label(labels, index):
+        return labels['timestamp'][index], labels['bnd_box'][index], labels['label'][index]
 
 class Val_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
@@ -105,64 +107,73 @@ class Val_Loader(Dataset):
         frame = transform_frame(frame)
 
         # Return frames and labels as tensors
-        return torch.from_numpy(frame), convert_label_to_tensor(label)
-
-
+        return torch.from_numpy(frame), label
 
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
     H = 300
-    # frame = gamma_correction(frame)
     frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=3)
     frame = cv2.resize(frame, (H, H))
     return frame
-
-def gamma_correction(frame):
-    gamma = 0.75
-    lookUpTable = np.empty((1,256), np.uint8)
-    for i in range(256):
-        lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
-    res = cv2.LUT(frame, lookUpTable)
-
-    return res
 
 # Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
 def create_labels_dict(labels):
     label_dict = {}
     for label in labels:
         if label[0] not in label_dict:
-            label_dict[label[0]] = label
+            label_dict[label[0]] = [label]
         else:
-            label_dict[label[0]] = [label_dict[label[0]], [label]]
+            label_dict[label[0]].append(label)
     
     return label_dict
 
 # Converts each label for the timestamp to tensor
 # Since labels contain the coordinates of the face speaking and the actual label
 # all values need to be of the same type
-def convert_label_to_tensor(labels):
-    labels = {}
-    for time in labels:
-        for i in labels[time]:
-            if labels[time][i][-1] == 'NOT_SPEAKING':
-                labels[time][i][-1]  = 0
-            else:
-                labels[time][i][-1]  = 1  
-            
-            labels[time][i] = labels[time][i].toTensor()
+def convert_label_to_tensor(label):
+    label_tensors = {}
+    label_list = list(label.items())
+    labels = label_list[0][1]
 
-    return labels
+    if len(labels) > 1:
+        # bnd = np.array([[]])
+        # for arr in labels:
+        #     bnd = np.append(bnd, np.array(arr[1:-1]))
+
+        # print(bnd)
+
+        for i in range(len(labels)):
+            label_tensors['timestamp'] = labels[i][0]
+
+            # if 'bnd_box' in label_tensors:
+            #     label_tensors['bnd_box'].append(labels[i][1:-1])
+            # else:
+            label_tensors['bnd_box'] = labels[i][1:-1].astype(dtype=float)
+
+            if 'label' in label_tensors:
+                label_tensors['label'].append(labels[i][-1])
+            else:
+                label_tensors['label'] = [labels[i][-1]]
+
+    else:    
+        for arr in labels:
+            label_tensors['timestamp'] = arr[0]
+            label_tensors['bnd_box'] = arr[1:-1].astype(dtype=float)
+            label_tensors['label'] = arr[-1]
+
+
+    return label_tensors
+    
+
 
 
 if __name__ == "__main__":
     # ds = Train_Loader(video_id='_mAfwH6i90E')
     ds = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
-    # print(sample)
-    print(ds.__len__())
-    print(len(ds.frames))
-    print(len(ds.labels))
-    # for i in range(len(ds.frames)):
-    #     print(ds.__getitem__(i))
+
+    for i in range(len(ds.frames)):
+        _, labels = ds.__getitem__(i)
+        print(labels)
 
     # show_labels(frame, label)
     # print(ds.labels)
