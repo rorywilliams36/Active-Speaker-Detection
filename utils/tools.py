@@ -1,4 +1,4 @@
-import cv2
+import cv2, torch
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 # Frame must be converted to a numpy array 
 def show_labels(frame, labels):
     y_dims, x_dims = frame.shape[:2]
-    for i in labels:
-
+    for i in range(len(labels)):
         x1, y1 = (labels[i][1], labels[i][1])
         x2, y2 = (labels[i][1], labels[i][1])
         speak = labels[i][1]
@@ -65,5 +64,28 @@ def plot_box(frame, coords):
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+def plot_actual(frame, coords):
+    if torch.is_tensor(coords):
+        x1, y1, x2, y2 = coords[:] * 300
+        x1 = round(float(x1))
+        y1 = round(float(y1))
+        x2 = round(float(x2))
+        y2 = round(float(y2)) 
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+    else:
+        for coord in coords:
+            x1, y1, x2, y2 = coord * 300
+            x1 = round(float(x1))
+            y1 = round(float(y1))
+            x2 = round(float(x2))
+            y2 = round(float(y2))
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+    cv2.imshow('frame', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
 
 
