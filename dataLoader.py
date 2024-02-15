@@ -12,13 +12,15 @@ TEST_LABELS = f'{current_path}/dataset/ava_activespeaker_val_v1.0/'
 class Train_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'train'):
         '''
-        root_dir: directory holding the dataset
-        data_path: path to data
-        video_id: id of the video being loaded
-        frames: list of all frame files as jpgs
-        labels: Preprocessed csv file containing all labels
+        Args:
+            root_dir: directory holding the dataset
+            data_path: path to data
+            video_id: id of the video being loaded
+            frames: list of all frame files as jpgs
+            labels: Preprocessed csv file containing all labels
 
         '''
+
         self.root_dir = root_dir # directory holding the data/frames
         self.data_path = os.path.join(f'{current_path}/dataset', self.root_dir) # path to respective dataset folder
         self.video_id = video_id
@@ -74,8 +76,7 @@ class Train_Loader(Dataset):
         return spliced_labels
             
     # Temporary workaround
-    # Due to all tensors loaded having to be the same length
-    # If a frame has multiple labels only one is loaded 
+    # Due to all tensors loaded having to be the same length if a frame has multiple labels only one is loaded 
     # This extracts and gets all labels for the corresponding frame
     def extract_labels(self, all_labels, current_labels, index):
         timestamp = float(current_labels['timestamp'][index])
