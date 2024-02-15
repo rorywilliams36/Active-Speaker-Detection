@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from dataLoader import Train_Loader, Val_Loader
 from model import ActiveSpeaker
-from evaulation import *
+from evaulation import eval_face_detection
 from utils import tools
 
 path = os.getcwd()
@@ -29,18 +29,29 @@ def main():
 
     trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
     # trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
-    trainLoader = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
+    trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
 
     num = 0
-    for images, labels in trainLoader:
+    t_correct = 0
+    t_total = 0
+    for images, labels in trainLoaded:
         for i in range(len(images)):
             asd = ActiveSpeaker(images[i])
             faces = asd.model()
-            # print(i)
+            actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
+            correct, total = eval_face_detection(faces, actual_label)
+            t_correct += correct
+            t_total += total
+            # tools.plot_frame(images[i].numpy())
             # if num % 100 == 0:
-            #     tools.plot_faces_detected(images[i].numpy(), faces)
+            # tools.plot_faces_detected(images[i].numpy(), faces)
+            # tools.plot_actual(images[i].numpy(), actual_label[1])
 
             num += 1
+    
+    print('Correct Faces Detected: ', t_correct)
+    print('Total Number of Faces: ', t_total)
+    print('Percent Correct: ', t_correct/t_total *100)
 
 if __name__ == "__main__":
     main()
