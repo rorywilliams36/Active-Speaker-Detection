@@ -47,6 +47,7 @@ class Train_Loader(Dataset):
         # Gets corresponding label from the timestamp
         # Also remove irrelevant ids/values from label
         p_labels = np.array(self.labels.loc[self.labels['Timestamp'] == timestamp])[:, 1:-1]
+
         # Get dict of labels
         label = create_labels_dict(p_labels)
 
@@ -72,8 +73,19 @@ class Train_Loader(Dataset):
 
         return spliced_labels
             
-    def extract_label(labels, index):
-        return labels['timestamp'][index], labels['bnd_box'][index], labels['label'][index]
+    # Temporary workaround
+    # Due to all tensors loaded having to be the same length
+    # If a frame has multiple labels only one is loaded 
+    # This extracts and gets all labels for the corresponding frame
+    def extract_labels(self, all_labels, current_labels, index):
+        timestamp = float(current_labels['timestamp'][index])
+        pos_labels = np.array(all_labels.loc[all_labels['Timestamp'] == timestamp])[:, 1:-1]
+
+        if len(pos_labels) > 1:
+            return timestamp, pos_labels[:, 1:5], pos_labels[:, -1]
+
+        return current_labels['timestamp'][index], current_labels['bnd_box'][index], current_labels['label'][index]
+
 
 class Val_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
@@ -135,32 +147,10 @@ def convert_label_to_tensor(label):
     label_list = list(label.items())
     labels = label_list[0][1]
 
-    if len(labels) > 1:
-        # bnd = np.array([[]])
-        # for arr in labels:
-        #     bnd = np.append(bnd, np.array(arr[1:-1]))
-
-        # print(bnd)
-
-        for i in range(len(labels)):
-            label_tensors['timestamp'] = labels[i][0]
-
-            # if 'bnd_box' in label_tensors:
-            #     label_tensors['bnd_box'].append(labels[i][1:-1])
-            # else:
-            label_tensors['bnd_box'] = labels[i][1:-1].astype(dtype=float)
-
-            if 'label' in label_tensors:
-                label_tensors['label'].append(labels[i][-1])
-            else:
-                label_tensors['label'] = [labels[i][-1]]
-
-    else:    
-        for arr in labels:
-            label_tensors['timestamp'] = arr[0]
-            label_tensors['bnd_box'] = arr[1:-1].astype(dtype=float)
-            label_tensors['label'] = arr[-1]
-
+    for arr in labels:
+        label_tensors['timestamp'] = arr[0]
+        label_tensors['bnd_box'] = arr[1:-1].astype(dtype=float)
+        label_tensors['label'] = arr[-1]
 
     return label_tensors
     
