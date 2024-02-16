@@ -87,5 +87,27 @@ def plot_actual(frame, coords):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+# Plots scatter graph showing chromatic values of an image
+def plot_chromatic(chromatic):
+    r = chromatic[:, :, 0]
+    g = chromatic[:, :, 1]
+    # print(r)
+    x = np.linspace(2, -2, 100)
+    r_u =  -1.3767 * (x**2) + (1.0743 * x) + 0.1452
+    r_l = -0.776 * (x**2) + (0.5601 * x) + 0.1766
+    l_r = -0.776 * (x**2) + (0.5601 * x) + 0.2123
+    plt.plot(x, r_u, color='red')
+    plt.plot(x, r_l, color='red')
+    plt.plot(x, l_r, color='green')
+    plt.scatter(r, g)
+    plt.xlim([0, 1])
+    plt.ylim([0, 1])
+    plt.xlabel('red chromatic')
+    plt.ylabel('green chromatic')
+    plt.show()
 
-
+def plot_side_by_side(lip, image):
+    img = cv2.hconcat(lip, image)
+    cv2.imshow('images', img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

@@ -87,6 +87,10 @@ class Train_Loader(Dataset):
 
         return current_labels['timestamp'][index], current_labels['bnd_box'][index], current_labels['label'][index]
 
+    def extract_all(self, all_labels, current_labels, index):
+        timestamp = float(current_labels[0])
+        pos_labels = np.array(all_labels.loc[all_labels['Timestamp'] == timestamp])
+        return pos_labels
 
 class Val_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
