@@ -35,11 +35,10 @@ class ActiveSpeaker():
 
             # Extracts and resizes the face detected from the frame
             face_region = cv2.resize(self.frame[y1:y2, x1:x2], (64,64))
-            chromatic = self.chromatic_vals(face_region)
-            # tools.plot_frame(chromatic)
-            # tools.plot_chromatic(chromatic)
-            # tools.plot_frame(face_region)
-            lip_pixels = self.define_lip_pixels(chromatic, face_region)
+            # chromatic = self.chromatic_vals(face_region)
+            lip_pixels = self.define_lip_pixels(face_region)
+            tools.plot_frame(lip_pixels)
+            tools.plot_frame(face_region)
 
 
     def chromatic_vals(self, face_img):
@@ -55,12 +54,20 @@ class ActiveSpeaker():
 
         return chromatic
 
-    def define_lip_pixels(self, chromatic, face_img):
-        lip_pixels = np.zeros(chromatic.shape[:2])
-        for row in range(len(chromatic)):
-            for col in range(len(chromatic[row])):
-                r, g = chromatic[row][col]
-                B, G, R = face_img[row][col]
+    def define_lip_pixels(self, face_img):
+        lip_pixels = np.zeros(face_img.shape)
+        for row in range(len(face_img)):
+            for col in range(len(face_img[row])):
+                face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+                R, G, B = face_img[row][col].astype(dtype=np.float64)
+                I = B + G + R
+
+                if I == 0:
+                    r = 0
+                    g = 0
+                else:
+                    r = R / I
+                    g = G / I
 
                 discriminant = -0.776 * (r**2) + (0.5601 * r) + 0.2123
                 r_lower = -0.776 * (r**2) + (0.5601 * r) + 0.1766
@@ -68,21 +75,6 @@ class ActiveSpeaker():
 
                 if g >= r_lower and g <= discriminant:
                     if R >= 10 and B >= 10 and G >= 10:
-                        lip_pixels[row][col] = 1
+                        lip_pixels[row][col] = (255,255,255)
 
-        new = np.zeros(face_img.shape)
-        # print(face_img.shape)
-
-        for row in range(len(lip_pixels)):
-            for col in range(len(lip_pixels)):
-                if lip_pixels[row][col] == 1:
-                    new[row][col] = face_img[row][col]
-                else:
-                    new[row][col] = (0, 0, 0)
-        
-        # tools.plot_side_by_side(lip_pixels, face_img)
-        # tools.plot_frame(lip_pixels)
-        # tools.plot_frame(face_img)
-        # cv2.cvtColor(new, cv2.COLOR_GRAY2BGR)
-        # tools.plot_frame(new)
         return lip_pixels

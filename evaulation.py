@@ -9,7 +9,7 @@ Compare predicted labels with actual labels
 
 '''
 
-# For single labels
+# General evaluation for face detection
 def eval_face_detection(predicteds, actuals):
     count = 0
     if len(predicteds) == 0 or len(actuals) == 0:
@@ -25,7 +25,6 @@ def eval_face_detection(predicteds, actuals):
                 c_x = (a_x1 + a_x2) / 2
                 c_y = (a_y1 + a_y2) / 2
                 if (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2):
-                    # print(True)
                     count += 1
                     break
 
@@ -38,8 +37,8 @@ def eval_face_detection(predicteds, actuals):
             c_x = (a_x1 + a_x2) / 2
             c_y = (a_y1 + a_y2) / 2
             if (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2):
-                # print(True)
                 count += 1
+
         total = 1
             
     return count, total
