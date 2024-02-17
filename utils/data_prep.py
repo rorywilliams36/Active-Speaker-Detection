@@ -54,22 +54,31 @@ def split_into_frames(video_id):
 
     cap.release()
 
-def download_files(file_urls, output_directory):
-    # Checks if output directory exists if not creates it
-    path = f'{current_path}/dataset/{output_directory}'
-    if not os.path.exists(path):
-        os.makedirs(path)
+def save_facetracks(face, label, trainLoader, face_coords, index):
+    output = 'facetracks'
+    if not os.path.exists(f'{path}/dataset/{output}'):
+        os.makedirs(f'{path}/dataset/{output}')
 
-    # Downloads files
-    for url in file_urls:
-        try:
-            command = f"curl -o {path} {url}"
-            subprocess.run(command, shell=True, check=True)
-            print(f"Downloaded")
-        # if error occured
-        except subprocess.CalledProcessError as e:
-            print(f"Error downloading {url}: {e}")
+    pos_labels = trainLoader.extract_all(trainLoader.labels, label, index)
+    if len(pos_labels) > 1:
+        for l in pos_labels:
+            facetrack_id = l[-1].split(':')[-1]
+            if get_face_track_from_coords(face_coords, l[2:-2]):
+                cv2.imwrite(f'{path}/dataset/{output}/{l[0]}_{facetrack_id}_{l[1]}.jpg', face)
 
+    else:
+        l = pos_labels[0]
+        facetrack_id = l[-1].split(':')[-1]
+        cv2.imwrite(f'{path}/dataset/{output}/{l[0]}_{facetrack_id}_{l[1]}.jpg', face)
+    
+def get_face_track_from_coords(face, coords):
+    x1, y1, x2, y2 = face[3:7] * 300
+    a_x1, a_y1, a_x2, a_y2 = coords * 300
+    c_x = (a_x1 + a_x2) / 2
+    c_y = (a_y1 + a_y2) / 2
+    if (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2):
+        return True
+    return False
 
 if __name__ == "__main__":
     # split_into_frames('_mAfwH6i90E')
