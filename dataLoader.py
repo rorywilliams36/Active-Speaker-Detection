@@ -129,9 +129,15 @@ class Val_Loader(Dataset):
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
     H = 300
-    frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=3)
+    # frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=3)
+    # frame = gamma_correction(frame)
+    # frame = cv2.bilateralFilter(frame, 5, 75, 75)
+    img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    img_hsv[:,:,2] = cv2.equalizeHist(img_hsv[:,:,2])
+    frame = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
     frame = cv2.resize(frame, (H, H))
     return frame
+
 
 # Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
 def create_labels_dict(labels):
