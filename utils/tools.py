@@ -67,6 +67,7 @@ def plot_box(frame, coords):
 
 # Plots actual bounding box for frame 
 def plot_actual(frame, coords):
+    # Plots single bounding box
     if torch.is_tensor(coords):
         x1, y1, x2, y2 = coords[:] * 300
         x1 = round(float(x1))
@@ -76,6 +77,7 @@ def plot_actual(frame, coords):
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
     else:
+        # Plots multiple boxes
         for coord in coords:
             x1, y1, x2, y2 = coord * 300
             x1 = round(float(x1))
@@ -106,6 +108,7 @@ def plot_chromatic(chromatic):
     plt.ylabel('green chromatic')
     plt.show()
 
+# Plots histogram of the image
 def plot_hist(img):
     hist = cv2.calcHist([img], [0], None, [256], [0, 256])
     plt.plot(hist)
@@ -113,6 +116,7 @@ def plot_hist(img):
     plt.ylabel('Occurences')
     plt.show()
 
+# Plots the 3d colour space of the image
 def plot_color_space(img):
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_rgb = img_rgb / 255
