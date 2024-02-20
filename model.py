@@ -1,9 +1,12 @@
-import cv2
+import cv2, dlib
 import pandas as pd
 import numpy as np
 
+from imutils import face_utils
 from faceDetection.faceDetector import FaceDetection
 from utils import tools
+
+landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
     def __init__(self, frame):
@@ -14,15 +17,16 @@ class ActiveSpeaker():
         face_detect = FaceDetection(self.frame)
         faces = face_detect.detect()
 
-        self.lip_detection(faces)
+        lip_pixels = self.lip_detection(faces)
         # tools.plot_faces_detected(self.frame, faces)
         
 
         return faces
 
- 
+
     def lip_detection(self, faces):
         h, w = self.frame.shape[:2]
+        H = 64
         for face in faces:
             # Gets coordinates of bounding box
             x1, y1, x2, y2 = face[3:7] * h
@@ -34,12 +38,25 @@ class ActiveSpeaker():
             y2 = min(round(float(y2))+5, h)
 
             # Extracts and resizes the face detected from the frame
-            face_region = cv2.resize(self.frame[y1:y2, x1:x2], (64,64))
-            # chromatic = self.chromatic_vals(face_region)
-            lip_pixels = self.define_lip_pixels(face_region)
-            tools.plot_frame(lip_pixels)
-            tools.plot_frame(face_region)
+            face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
+            gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
+  
+            points = landmarks(gray, dlib.rectangle(0, 0, H, H))
+            points = face_utils.shape_to_np(points)
 
+            for i in range(48,68): 
+                # draw the keypoints on the detected faces
+                cv2.circle(face_region, (points[i][0], points[i][1]), 1, (0, 255, 0), -1)
+
+            tools.plot_frame(face_region)
+            #tools.plot_frame(lip_pixels)
+            #tools.plot_color_space(face_region)
+            #tools.plot_hist(face_region)
+
+        try:
+            return points[48:-1]
+        except:
+            return None
 
     def chromatic_vals(self, face_img):
         chromatic = np.zeros((face_img.shape[0], face_img.shape[1], 2)).astype(dtype=np.float64)
@@ -74,7 +91,7 @@ class ActiveSpeaker():
                 r_upper =  -1.3767 * (r**2) + (1.0743 * r) + 0.1452
 
                 if g >= r_lower and g <= discriminant:
-                    if R >= 10 and B >= 10 and G >= 10:
+                    if R >= 20 and B >= 20 and G >= 20:
                         lip_pixels[row][col] = (255,255,255)
 
         return lip_pixels
