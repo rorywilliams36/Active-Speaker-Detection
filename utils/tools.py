@@ -17,7 +17,7 @@ def show_labels(frame, labels):
         x2 = round(float(x2)*x_dims)
         y2 = round(float(y2)*y_dims)
 
-        if speak == 0:
+        if speak == 'NOT_SPEAKING':
             c = (0,0,255)
         else:
             c = (0,255,0)
@@ -65,6 +65,7 @@ def plot_box(frame, coords):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+# Plots actual bounding box for frame 
 def plot_actual(frame, coords):
     if torch.is_tensor(coords):
         x1, y1, x2, y2 = coords[:] * 300
@@ -91,7 +92,6 @@ def plot_actual(frame, coords):
 def plot_chromatic(chromatic):
     r = chromatic[:, :, 0]
     g = chromatic[:, :, 1]
-    # print(r)
     x = np.linspace(2, -2, 100)
     r_u =  -1.3767 * (x**2) + (1.0743 * x) + 0.1452
     r_l = -0.776 * (x**2) + (0.5601 * x) + 0.1766
@@ -106,8 +106,18 @@ def plot_chromatic(chromatic):
     plt.ylabel('green chromatic')
     plt.show()
 
-def plot_side_by_side(lip, image):
-    img = cv2.hconcat(lip, image)
-    cv2.imshow('images', img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+def plot_hist(img):
+    hist = cv2.calcHist([img], [0], None, [256], [0, 256])
+    plt.plot(hist)
+    plt.xlabel('intensity')
+    plt.ylabel('Occurences')
+    plt.show()
+
+def plot_color_space(img):
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_rgb = img_rgb / 255
+    B,G,R = cv2.split(img)
+
+    ax = plt.axes(projection='3d')
+    ax.scatter(R,G,B, c=img_rgb.reshape((-1, 3)))
+    plt.show()
