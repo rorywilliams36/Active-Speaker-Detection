@@ -11,19 +11,38 @@ landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 class ActiveSpeaker():
     def __init__(self, frame):
         self.frame = frame.numpy()
+        self.prev_centre_lip = (0,0)
 
     def model(self):
         # for frame in enumerate(train_features):
         face_detect = FaceDetection(self.frame)
         faces = face_detect.detect()
 
-        lip_pixels = self.lip_detection(faces)
+        face_region, lip_pixels = self.lip_detection(faces)
         # tools.plot_faces_detected(self.frame, faces)
-        
+
+        # Set lip pixels values 
+        if len(lip_pixels) > 0:
+            centre_upper = lip_pixels[3]
+            centre_lower = lip_pixels[9]
+            left = lip_pixels[0]
+            right = lip_pixels[6]
+
+        # Sets bounding box for lips
+        lip_box = [left[0]-5,centre_upper[1]-5, right[0]+5, centre_lower[1]+5]
+        lip_area = face_region[lip_box[0]:lip_box[2], lip_box[1]:lip_box[3]]
+
+        # tools.plot_box(face_region, lip_area)
 
         return faces
 
+    def speaker_detection(self, face_region, lip_pixels, lip_area):
+        pass
 
+    def kalman(self):
+        pass
+
+    # Gets lips using dlib shape predictor model
     def lip_detection(self, faces):
         h, w = self.frame.shape[:2]
         H = 64
@@ -44,20 +63,21 @@ class ActiveSpeaker():
             points = landmarks(gray, dlib.rectangle(0, 0, H, H))
             points = face_utils.shape_to_np(points)
 
-            for i in range(48,68): 
-                # draw the keypoints on the detected faces
-                cv2.circle(face_region, (points[i][0], points[i][1]), 1, (0, 255, 0), -1)
+            # for i in range(48,68): 
+            #     # draw the keypoints on the detected faces
+            #     cv2.circle(face_region, (points[i][0], points[i][1]), 1, (0, 255, 0), -1)
 
-            tools.plot_frame(face_region)
+            # tools.plot_frame(face_region)
             #tools.plot_frame(lip_pixels)
             #tools.plot_color_space(face_region)
             #tools.plot_hist(face_region)
 
         try:
-            return points[48:-1]
+            return face_region, points[48:-1]
         except:
-            return None
+            return [], []
 
+    # Gets the chromatic colours of an image and stores in array
     def chromatic_vals(self, face_img):
         chromatic = np.zeros((face_img.shape[0], face_img.shape[1], 2)).astype(dtype=np.float64)
         for r in range(len(face_img)):
@@ -71,6 +91,9 @@ class ActiveSpeaker():
 
         return chromatic
 
+    # Definces lip pixels using Chiang et al's paper
+    # doi:10.1016/j.rti.2003.08.003
+    # Unfortunatley doesn't work
     def define_lip_pixels(self, face_img):
         lip_pixels = np.zeros(face_img.shape)
         for row in range(len(face_img)):
