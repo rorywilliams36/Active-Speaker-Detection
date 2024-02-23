@@ -11,7 +11,7 @@ landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 class ActiveSpeaker():
     def __init__(self, frame):
         self.frame = frame.numpy()
-        self.prev_centre_lip = (0,0)
+        self.prev_centre_lip = (0, 0)
 
     def model(self):
         # for frame in enumerate(train_features):
@@ -27,16 +27,27 @@ class ActiveSpeaker():
             centre_lower = lip_pixels[9]
             left = lip_pixels[0]
             right = lip_pixels[6]
+            # cv2.circle(face_region, (left[0], left[1]), 1, (255,0,0), -1)
+            # cv2.circle(face_region, (centre_lower[0], centre_lower[1]), 1, (255,0,0), -1)
+            # cv2.circle(face_region, (right[0], right[1]), 1, (255,0,0), -1)
+            # cv2.circle(face_region, (centre_upper[0], centre_upper[1]), 1, (255,0,0), -1)
 
-        # Sets bounding box for lips
-        lip_box = [left[0]-5,centre_upper[1]-5, right[0]+5, centre_lower[1]+5]
-        lip_area = face_region[lip_box[0]:lip_box[2], lip_box[1]:lip_box[3]]
+            # tools.plot_frame(face_region)
 
-        # tools.plot_box(face_region, lip_area)
+            # Sets bounding box for lips
+            lip_box = [left[0]-2, centre_upper[1]-2, right[0]+2, centre_lower[1]+2]
+            # Get area of lips from face
+            lip_area = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
+            self.speaker_detection(face_region, lip_box, lip_area)
+            tools.plot_box(face_region, lip_box)
+            #tools.plot_frame(lip_area)
 
         return faces
 
     def speaker_detection(self, face_region, lip_pixels, lip_area):
+        # lip_area = cv2.resize(lip_ar)
+        # lip_gray = cv2.cvtColor(lip_area, cv2.COLOR_BGR2GRAY)
+        # tools.plot_frame(lip_area)
         pass
 
     def kalman(self):
