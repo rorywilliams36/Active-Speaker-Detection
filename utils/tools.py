@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
+'''
+Tools file which mainly contains functions for different plots
+'''
+
 # Displays the frame and given label on the image
 # Frame must be converted to a numpy array 
 def show_labels(frame, labels):
@@ -108,7 +112,7 @@ def plot_chromatic(chromatic):
     plt.ylabel('green chromatic')
     plt.show()
 
-# Plots histogram of the image
+# Plots colour histogram of the image
 def plot_hist(img):
     hist = cv2.calcHist([img], [0], None, [256], [0, 256])
     plt.plot(hist)
