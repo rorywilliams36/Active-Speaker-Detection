@@ -29,7 +29,6 @@ class Train_Loader(Dataset):
 
     # Returns number of items in dataset
     def __len__(self):
-        # return len(self.labels.drop_duplicates(subset=['Timestamp']))
         return len(self.frames)
 
     # Returns a certain point from dataset
@@ -72,6 +71,10 @@ class Train_Loader(Dataset):
 
         # slice to the last frame recorded
         spliced_labels = labels_df.loc[labels_df['Timestamp'] <= last]
+
+        # Normalise labels
+        spliced_labels = spliced_labels.replace('SPEAKING_AUDIBLE', 'SPEAKING')
+        spliced_labels = spliced_labels.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
 
         return spliced_labels
             
@@ -130,8 +133,8 @@ class Val_Loader(Dataset):
 def transform_frame(frame):
     H = 300
     # frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=3)
-    # frame = gamma_correction(frame)
     # frame = cv2.bilateralFilter(frame, 5, 75, 75)
+    frame = cv2.GaussianBlur(frame, (5,5), 2)
     img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     img_hsv[:,:,2] = cv2.equalizeHist(img_hsv[:,:,2])
     frame = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
