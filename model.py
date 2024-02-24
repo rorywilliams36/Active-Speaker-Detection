@@ -43,6 +43,7 @@ class ActiveSpeaker():
                 # cv2.circle(face_region, (centre_lower[0], centre_lower[1]), 1, (255,0,0), -1)
                 # cv2.circle(face_region, (right[0], right[1]), 1, (255,0,0), -1)
                 # cv2.circle(face_region, (centre_upper[0], centre_upper[1]), 1, (255,0,0), -1)
+                # tools.plot_frame(face_region)
 
                 predicted['faces'].append(face[3:7])
                 predicted['label'].append(speaking)
@@ -58,10 +59,11 @@ class ActiveSpeaker():
         left = lip_pixels[0]
         right = lip_pixels[6]
 
-        opposite = abs(centre_lower[1] - centre_lip[1])
-        hypotenuse = np.linalg.norm(centre_lip - centre_lower)
+        opposite = np.linalg.norm(centre_lower - centre_lip)
+        hypotenuse = np.linalg.norm(left - centre_lip)
         if opposite <= hypotenuse and opposite > 0:
-            if np.arcsin(opposite / hypotenuse) > 1:
+            #print(np.arcsin(opposite / hypotenuse))
+            if np.arcsin(opposite / hypotenuse) > 0.315:
                 return 'SPEAKING'
         return 'NOT_SPEAKING'
 
