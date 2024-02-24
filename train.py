@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from dataLoader import Train_Loader, Val_Loader
 from model import ActiveSpeaker
-from evaulation import eval_face_detection
+from evaulation import eval_face_detection, evaluate
 from utils import tools
 
 path = os.getcwd()
@@ -23,12 +23,11 @@ def main():
 
     # parser.add_argument('--train_dir', type=str, default='train', help="Data path for the training data")
     # parser.add_argument('--test_dir', type=str, default='test', help="Data path for the testing data")
-    # parser.add_argument('--CUDA', type=bool, default=False, help="Whether to run code on GPU is available")
 
     # args = parser.parse_args()
 
-    # trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
-    trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
+    trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
+    #trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
     trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
 
     num = 0
@@ -36,12 +35,14 @@ def main():
     t_total = 0
     for images, labels in trainLoaded:
         for i in range(len(images)):
-            asd = ActiveSpeaker(images[i])
-            faces = asd.model()
             actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
-            correct, total = eval_face_detection(faces, actual_label)
+            asd = ActiveSpeaker(images[i])
+            prediction = asd.model()
+            total, correct = evaluate(prediction, actual_label)
             t_correct += correct
             t_total += total
+
+
 
             
             # print(faces)
