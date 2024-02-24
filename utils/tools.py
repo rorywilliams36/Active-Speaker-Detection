@@ -36,7 +36,7 @@ def show_labels(frame, labels):
 def plot_frame(frame):
     # Scales frame up if frame is too small
     if frame.shape[0] < 100 or frame.shape[1] < 100:
-        frame = cv2.resize(frame, (150, 150))
+        frame = cv2.resize(frame, (200, 200))
 
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
@@ -65,6 +65,7 @@ def plot_box(frame, coords):
     x1, y1, x2, y2 = coords[:]
     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
+    frame = cv2.resize(frame, (300,300))
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -95,6 +96,7 @@ def plot_actual(frame, coords):
     cv2.destroyAllWindows()
 
 # Plots scatter graph showing chromatic values of an image
+# Shows threshold eq
 def plot_chromatic(chromatic):
     r = chromatic[:, :, 0]
     g = chromatic[:, :, 1]
