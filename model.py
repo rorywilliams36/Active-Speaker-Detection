@@ -59,16 +59,36 @@ class ActiveSpeaker():
         left = lip_pixels[0]
         right = lip_pixels[6]
 
-        opposite = np.linalg.norm(centre_lower - centre_lip)
-        hypotenuse = np.linalg.norm(left - centre_lip)
-        if opposite <= hypotenuse and opposite > 0:
-            #print(np.arcsin(opposite / hypotenuse))
-            if np.arcsin(opposite / hypotenuse) > 0.315:
-                return 'SPEAKING'
+        left_to_bot = self.mouth_angle(centre_lower, left)
+        # left_to_top = self.mouth_angle(centre_upper, left)
+        # left_angle = left_to_bot + left_to_top
+
+        # right_to_bot = self.mouth_angle(centre_lower, right)
+        # right_to_top = self.mouth_angle(centre_upper, right)
+        # right_angle = right_to_bot + right_to_top
+        
+        if left_to_bot > 0.315:
+            return 'SPEAKING'
         return 'NOT_SPEAKING'
 
     def kalman(self):
         pass
+
+    def mouth_angle(self, point1, point2):
+        '''
+        Args: 
+            Point1: first point (generally centre of upper/lower lip)
+            Point2: Second coordinate (generally either far left/right point)
+
+        Returns: Angle of mouth opening from the given points
+        '''
+
+        centre = (np.mean(point1[0], point2[0]), np.mean(point1[1], point2[1]))
+        opposite = np.linalg.norm(point1 - centre)
+        hypotenuse = np.linalg.norm(point2 - centre)
+        if opposite <= hypotenuse and opposite > 0:
+            return np.arcsin(opposite / hypotenuse)
+        return 0
 
     # Gets lips using dlib shape predictor model
     def feature_detection(self, face):
