@@ -11,7 +11,7 @@ from utils import tools
 
 path = os.getcwd()
 frames = glob.glob(f"{path}/dataset/train/*.jpg")
-ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', 'AYebXQ8eUkM', '7nHkh4sP5Ks']
+ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks'] # ,'AYebXQ8eUkM',
 
 
 def main():
@@ -31,8 +31,8 @@ def main():
     #trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='train')
     #trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
     #trainLoader = Train_Loader(video_id='AYebXQ8eUkM', root_dir='AYebXQ8eUkM')
-    # trainLoader = Train_Loader(video_id='7nHkh4sP5Ks', root_dir='7nHkh4sP5Ks')
-    # trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
+    #trainLoader = Train_Loader(video_id='7nHkh4sP5Ks', root_dir='7nHkh4sP5Ks')
+    #trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
 
     counts = [0,0,0,0] # tp, fp, tn, fn
     a_total = 0
@@ -54,7 +54,7 @@ def main():
                 counts[3] += fn
 
 
-        a_total += trainLoader.len_labels()
+        a_total += trainLoader.__len__()
     
     p, r, fm = metrics(counts)
 
@@ -63,45 +63,22 @@ def main():
     print('Total: ', np.sum(counts))
     print('Correct: ', counts[0] + counts[2])
     print('Incorrect: ', counts[1] + counts[3])
-    print('----------- Speakers -----------')
+    print('Accuracy: ', round((counts[0] + counts[2])/ (np.sum(counts)) *100, 3))
+    print('\n----------- Speakers -----------')
     print('Precision: ', p)
     print('Recall: ', r)
     print('F-Measure: ', fm)
 
-    non_p, non_r, non_fm = metrics([counts[2:-1], counts[0:1]])
-    print('----------- Non-Speakers -----------')
+    non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
+
+    print('\n----------- Non-Speakers -----------')
     print('Precision: ', non_p)
     print('Recall: ', non_r)
     print('F-Measure: ', non_fm)
 
     print('Average Precision: ', (p + non_p) /2)
 
-
-            
-    # print(faces)
-    # img = images[i].numpy()
-    # for face in faces:
-    #     # tools.plot_frame(face)
-    #     x1, y1, x2, y2 = face[3:7] * 300
-
-    #     # Grabs extra pixels around box to account for errors and also check ranges
-    #     x1 = max(round(float(x1))-5, 0)
-    #     y1 = max(round(float(y1))-5, 0)
-    #     x2 = min(round(float(x2))+5, 300)
-    #     y2 = min(round(float(y2))+5, 300)
-
-    #     # Extracts and resizes the face detected from the frame
-    #     face_region = cv2.resize(img[y1:y2, x1:x2], (64,64))
-    #     save_facetracks(face_region, actual_label, trainLoader, face, i)
-
-    
-    # tools.plot_frame(images[i].numpy())
-    # if num % 100 == 0:
-    # tools.plot_faces_detected(images[i].numpy(), faces)
-    # tools.plot_actual(images[i].numpy(), actual_label[1])
-
-
-
+    # conf_matrix(counts[0], counts[1], counts[2], counts[3])
 
 
 if __name__ == "__main__":
