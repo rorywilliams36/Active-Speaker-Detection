@@ -37,9 +37,9 @@ class ActiveSpeaker():
                 lip_box = [left[0]-2, centre_upper[1]-2, right[0]+2, centre_lower[1]+2]
 
                 # Get area of lips from face
-                lip_area = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
+                lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
 
-                speaking = self.speaker_detection(face_region, lip_pixels, lip_area, lip_box)
+                speaking = self.speaker_detection(face_region, lip_pixels, lip_region, lip_box)
 
                 # cv2.circle(face_region, (left[0], left[1]), 1, (255,0,0), -1)
                 # cv2.circle(face_region, (centre_lower[0], centre_lower[1]), 1, (255,0,0), -1)
@@ -49,27 +49,29 @@ class ActiveSpeaker():
 
                 predicted['faces'].append(face[3:7])
                 predicted['label'].append(speaking)
+                
                 # tools.plot_box(face_region, lip_box)
-                # tools.plot_frame(lip_area)
+                # lips = cv2.resize(lip_region, (256, 128))
+                # cv2.imshow('lips', lips)
+                # cv2.waitKey(0)
+                # cv2.destroyAllWindows()
 
         return predicted
 
-    def speaker_detection(self, face_region, lip_pixels, lip_area, lip_box):
+    def speaker_detection(self, face_region, lip_pixels, lip_region, lip_box):
         centre_lip = ((lip_box[0] + lip_box[2])/2, (lip_box[1] + lip_box[-1])/2)
         centre_upper = lip_pixels[3]
         centre_lower = lip_pixels[9]
         left = lip_pixels[0]
         right = lip_pixels[6]
 
-        left_to_bot = self.mouth_angle(centre_lower, left, centre_lip)
-        # left_to_top = self.mouth_angle(centre_upper, left)
-        # left_angle = left_to_bot + left_to_top
+        #left_to_bot = self.mouth_angle(centre_lower, left, centre_lip)
+        left_angle = self.mouth_angle(centre_lower, left, centre_lip) + self.mouth_angle(centre_upper, left, centre_lip)
+        right_angle = self.mouth_angle(centre_lower, right, centre_lip) + self.mouth_angle(centre_upper, right, centre_lip)
 
-        # right_to_bot = self.mouth_angle(centre_lower, right)
-        # right_to_top = self.mouth_angle(centre_upper, right)
-        # right_angle = right_to_bot + right_to_top
-
-        if left_to_bot > self.angle_thresh:
+        # print(right_angle)
+        # print('-----------')
+        if left_angle > 0.6 or right_angle > 0.58:
             return 'SPEAKING'
         return 'NOT_SPEAKING'
 
@@ -112,7 +114,7 @@ class ActiveSpeaker():
         face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
         gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
-        points = landmarks(gray, dlib.rectangle(0, 0, H, H))
+        points = landmarks(gray, dlib.rectangle(3, 3, H-3, H-3))
         points = face_utils.shape_to_np(points)
 
         # for i in range(48,68): 
