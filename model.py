@@ -10,13 +10,15 @@ from utils import tools
 landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
-    def __init__(self, frame):
+    def __init__(self, frame, face_thresh: float = 0.25, angle_thresh: float = 0.315):
         self.frame = frame.numpy()
         self.prev_centre_lip = (0, 0)
+        self.face_thresh = face_thresh
+        self.angle_thresh = angle_thresh
 
     def model(self):
         # for frame in enumerate(train_features):
-        face_detect = FaceDetection(self.frame)
+        face_detect = FaceDetection(self.frame, threshold=self.face_thresh)
         faces = face_detect.detect()
         predicted = {'faces' : [], 'label' : []}
         for face in faces:
@@ -59,33 +61,36 @@ class ActiveSpeaker():
         left = lip_pixels[0]
         right = lip_pixels[6]
 
-        left_to_bot = self.mouth_angle(centre_lower, left)
+        left_to_bot = self.mouth_angle(centre_lower, left, centre_lip)
         # left_to_top = self.mouth_angle(centre_upper, left)
         # left_angle = left_to_bot + left_to_top
 
         # right_to_bot = self.mouth_angle(centre_lower, right)
         # right_to_top = self.mouth_angle(centre_upper, right)
         # right_angle = right_to_bot + right_to_top
-        
-        if left_to_bot > 0.315:
+
+        if left_to_bot > self.angle_thresh:
             return 'SPEAKING'
         return 'NOT_SPEAKING'
 
     def kalman(self):
         pass
 
-    def mouth_angle(self, point1, point2):
+    def mouth_angle(self, point1, point2, centre_point):
         '''
         Args: 
             Point1: first point (generally centre of upper/lower lip)
             Point2: Second coordinate (generally either far left/right point)
+            Centre_point: Centre pixel of the lip
 
-        Returns: Angle of mouth opening from the given points
+        Returns: Angle of mouth opening from the given points (rads)
         '''
 
-        centre = (np.mean(point1[0], point2[0]), np.mean(point1[1], point2[1]))
-        opposite = np.linalg.norm(point1 - centre)
-        hypotenuse = np.linalg.norm(point2 - centre)
+        # Find the opposite and hypotenuse
+        opposite = np.linalg.norm(point1 - centre_point)
+        hypotenuse = np.linalg.norm(point2 - centre_point)
+
+        # Get angle
         if opposite <= hypotenuse and opposite > 0:
             return np.arcsin(opposite / hypotenuse)
         return 0
