@@ -45,6 +45,11 @@ def eval_face_detection(predicteds, actuals):
 
 
 def evaluate(prediction, actual):
+    tp = 0
+    fp = 0
+    tn = 0
+    fn = 0
+
     if torch.is_tensor(actual[1]):
         a_faces = actual[1].numpy()
     else:
@@ -53,36 +58,46 @@ def evaluate(prediction, actual):
     a_label = actual[-1]
     p_faces = prediction['faces']
     p_labels = prediction['label']
-    t_correct = 0
-    total = 0
 
     if len(p_labels) == 0 or len(p_faces) == 0:
         if len(a_faces.shape) > 1:
-            return len(a_faces), 0 
-        return 1, 0
+            return 0,0,0,0
+        return 0,0,0,0
 
     if len(a_faces.shape) > 1:
         for i in range(len(a_faces)):
             for j in range(len(p_faces)):
                 if face_evaluate(p_faces[j], a_faces[i]):
                     if p_labels[j] == a_label[i]:
-                        t_correct += 1
+                        if p_labels[j] == 'SPEAKING':
+                            tp += 1
+                        else:
+                            tn += 1
                         break
-
-            total += 1
+                    else:
+                        if p_labels[j] == 'SPEAKING' and a_label[i] != 'SPEAKING':
+                            fp += 1
+                        else:
+                            fn += 1
+                        break
+                        
     else:
         for j in range(len(p_faces)):
             if face_evaluate(p_faces[j], a_faces):
                 if p_labels[j] == a_label:
-
-                    t_correct += 1
+                    if p_labels[j] == 'SPEAKING':
+                        tp += 1
+                    else:
+                        tn += 1
                     break
-        total += 1
+                else:
+                    if p_labels[j] == 'SPEAKING' and a_label != 'SPEAKING':
+                        fp += 1
+                    else:
+                        fn += 1
+                    break
 
-
-    return total, t_correct
-
-
+    return tp, fp, tn, fn
 
 
 def face_evaluate(prediction, actual):
@@ -93,3 +108,10 @@ def face_evaluate(prediction, actual):
     if (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2):
         return True
     return False
+
+def metrics(counts):
+    tp,fp,tn,fn = counts
+    precision = tp / (tp+fp)
+    recall =  tp / (tp+fn)
+    f_measure = (2 * precision * recall) / (precision + recall)
+    return precision, recall, f_measure
