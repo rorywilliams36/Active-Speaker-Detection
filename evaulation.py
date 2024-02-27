@@ -1,5 +1,8 @@
 import cv2, torch
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import PrecisionRecallDisplay
 
 '''
 Calculate Precision, Recall, F-Measure
@@ -115,3 +118,15 @@ def metrics(counts):
     recall =  tp / (tp+fn)
     f_measure = (2 * precision * recall) / (precision + recall)
     return precision, recall, f_measure
+
+def mean_avg_precision():
+    pass
+
+def conf_matrix(tp,fp,tn,fn):
+    sns.heatmap([[tn, fp],[fn, tp]], cmap='crest', annot=True, fmt='.0f', 
+                xticklabels=['NOT_SPEAKING', 'SPEAKING'], yticklabels=['NOT_SEAKING', 'SPEAKING'])
+
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.title('Confusion Matrix')
+    plt.show()
