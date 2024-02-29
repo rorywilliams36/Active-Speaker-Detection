@@ -98,7 +98,7 @@ class ActiveSpeaker():
 
 
         #print(left_angle, right_angle)
-        if score >= 3.2:
+        if score >= 3.5:
             return 'SPEAKING', left_angle, right_angle
         return 'NOT_SPEAKING', left_angle, right_angle
 
@@ -111,7 +111,7 @@ class ActiveSpeaker():
             return 0
         else:
             if 'SPEAKING' in self.prev_labels[-3:-1]:
-                count += 2
+                count += 1
             # count += len([i for i in self.prev_labels if i == 'SPEAKING'])/5
         return count
 
