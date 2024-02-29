@@ -10,17 +10,20 @@ from utils import tools
 landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
-    def __init__(self, frame, face_thresh: float = 0.25, angle_thresh: float = 0.315):
+    def __init__(self, frame, face_thresh: float = 0.25, angle_thresh: tuple = (0.73, 0.71), prev_angles: list = [], prev_labels: list = []):
         self.frame = frame.numpy()
         self.prev_centre_lip = (0, 0)
+        self.prev_angles = prev_angles
+        self.prev_labels = prev_labels
         self.face_thresh = face_thresh
         self.angle_thresh = angle_thresh
 
     def model(self):
-        # for frame in enumerate(train_features):
+        # print(self.prev_angles)
         face_detect = FaceDetection(self.frame, threshold=self.face_thresh)
         faces = face_detect.detect()
         predicted = {'faces' : [], 'label' : []}
+        # print(len(faces))
         for face in faces:
             face_region, lip_pixels = self.feature_detection(face)
             # tools.plot_faces_detected(self.frame, faces)
@@ -37,9 +40,13 @@ class ActiveSpeaker():
                 lip_box = [left[0]-2, centre_upper[1]-2, right[0]+2, centre_lower[1]+2]
 
                 # Get area of lips from face
-                lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
+                # lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
 
-                speaking = self.speaker_detection(face_region, lip_pixels, lip_region, lip_box)
+                speaking, left, right = self.speaker_detection(face_region, lip_pixels, lip_box)
+                # print('prev',self.prev_angles)
+                prev_angles = self.update_stacks(self.prev_angles, (left, right))
+                # print('prev',self.prev_angles)
+                prev_labels = self.update_stacks(self.prev_labels, speaking)
 
                 # cv2.circle(face_region, (left[0], left[1]), 1, (255,0,0), -1)
                 # cv2.circle(face_region, (centre_lower[0], centre_lower[1]), 1, (255,0,0), -1)
@@ -55,11 +62,15 @@ class ActiveSpeaker():
                 # cv2.imshow('lips', lips)
                 # cv2.waitKey(0)
                 # cv2.destroyAllWindows()
+                # print('prev',prev_angles)
+        
+        return predicted, self.prev_angles, self.prev_labels
 
-        return predicted
-
-    def speaker_detection(self, face_region, lip_pixels, lip_region, lip_box):
+    def speaker_detection(self, face_region, lip_pixels, lip_box):
+        score = 0
         centre_lip = ((lip_box[0] + lip_box[2])/2, (lip_box[1] + lip_box[-1])/2)
+        # centre_lip2 = (round(centre_lip[0]), round(centre_lip[1]))
+
         centre_upper = lip_pixels[3]
         centre_lower = lip_pixels[9]
         left = lip_pixels[0]
@@ -69,14 +80,80 @@ class ActiveSpeaker():
         left_angle = self.mouth_angle(centre_lower, left, centre_lip) + self.mouth_angle(centre_upper, left, centre_lip)
         right_angle = self.mouth_angle(centre_lower, right, centre_lip) + self.mouth_angle(centre_upper, right, centre_lip)
 
+        score += self.compare_labels()
+        score += self.compare_angles(left_angle, right_angle)
+
+        # print(score)
         # print(right_angle)
         # print('-----------')
-        if left_angle > 0.6 or right_angle > 0.58:
-            return 'SPEAKING'
-        return 'NOT_SPEAKING'
+        # cv2.line(face_region, centre_lower, centre_lip2, color=(0,255,0), thickness=1)
+        # cv2.line(face_region, left, centre_lip2, color=(0,255,0), thickness=1)
+        # cv2.line(face_region, centre_lower, left, color=(0,255,0),thickness=1)
+        # cv2.line(face_region, centre_upper, left, color=(0,255,0), thickness=1)
+
+        # cv2.line(face_region, centre_upper, centre_lip2, color=(0,0,255), thickness=1)
+        # cv2.line(face_region, centre_upper, right, color=(0,0,255), thickness=1)
+        # cv2.line(face_region, centre_lip2, right, color=(0,0,255),thickness=1)
+        # cv2.line(face_region, centre_lower, right, color=(0,0,255), thickness=1)
+
+
+        #print(left_angle, right_angle)
+        if score >= 3.2:
+            return 'SPEAKING', left_angle, right_angle
+        return 'NOT_SPEAKING', left_angle, right_angle
 
     def kalman(self):
         pass
+
+    def compare_labels(self):
+        count = 0
+        if len(self.prev_labels) == 0:
+            return 0
+        else:
+            if 'SPEAKING' in self.prev_labels[-3:-1]:
+                count += 2
+            # count += len([i for i in self.prev_labels if i == 'SPEAKING'])/5
+        return count
+
+    def compare_angles(self, left, right):
+        score = 0
+        score += self.inital_angle_comparison(left, right)
+        if len(self.prev_angles) > 3:
+            left_avg = np.mean(self.prev_angles[:][0])
+            right_avg = np.mean(self.prev_angles[:][1])
+            l_change = left - left_avg
+            r_change = right - right_avg
+            if l_change > 0.05 or r_change > 0.05:
+                score += 1
+            elif l_change > 0 or r_change > 0:
+                score += 0.25
+            else:
+                score -= 0.15
+
+            if left > self.angle_thresh[0] and right > self.angle_thresh[1]:
+                score += 1
+            else:
+                score -= 0.25
+
+
+        return score
+
+    # Classifies the angle given that the previous angles recorded are less than 2
+    def inital_angle_comparison(self, left, right):
+        if len(self.prev_angles) > 2:
+            prev_left, prev_right = self.prev_angles[0]
+            l_change = left - prev_left
+            r_change = right - prev_right
+            if l_change > 0 and r_change > 0:
+                if left > self.angle_thresh[0] and right > self.angle_thresh[1]:
+                    return 3
+                return 2
+        else:
+            if left > self.angle_thresh[0] and right > self.angle_thresh[1]:
+                return 5
+            else:
+                return -0.25
+        return 0
 
     def mouth_angle(self, point1, point2, centre_point):
         '''
@@ -96,6 +173,14 @@ class ActiveSpeaker():
         if opposite <= hypotenuse and opposite > 0:
             return np.arcsin(opposite / hypotenuse)
         return 0
+
+    # Contains the values/items from the last 10 frames
+    # Updates stack by adding new items and removing if greater than 10
+    def update_stacks(self, stack, item):
+        if len(stack) > 15:
+            _ = stack.pop(0)
+        stack = stack.append(item)
+        return stack
 
     # Gets lips using dlib shape predictor model
     def feature_detection(self, face):
@@ -131,6 +216,10 @@ class ActiveSpeaker():
         except:
             return [], []
 
+    '''
+    Functions below were trialed in implementation  
+    Functions either failed, did not improve results or are displaced by the current methods
+    '''
     # Gets the chromatic colours of an image and stores in array
     def chromatic_vals(self, face_img):
         chromatic = np.zeros((face_img.shape[0], face_img.shape[1], 2)).astype(dtype=np.float64)
