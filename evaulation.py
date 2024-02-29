@@ -65,7 +65,7 @@ def evaluate(prediction, actual):
     if len(p_labels) == 0 or len(p_faces) == 0:
         if len(a_faces.shape) > 1:
             return 0,0,0,0
-        return 0,0,0,0
+        return 0,0,0,0 
 
     if len(a_faces.shape) > 1:
         for i in range(len(a_faces)):
@@ -114,9 +114,21 @@ def face_evaluate(prediction, actual):
 
 def metrics(counts):
     tp,fp,tn,fn = counts
-    precision = tp / (tp+fp)
-    recall =  tp / (tp+fn)
+    if tp+fp == 0:
+        precision = 0
+    else:
+        precision = tp / (tp+fp)
+
+    if tp+fn == 0:
+        recall = 0
+    else:
+        recall =  tp / (tp+fn)
+    
+    if precision == 0 and recall == 0:
+        return 0,0,0
+         
     f_measure = (2 * precision * recall) / (precision + recall)
+
     return precision, recall, f_measure
 
 def mean_avg_precision():
