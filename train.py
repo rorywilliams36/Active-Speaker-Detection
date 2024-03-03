@@ -10,7 +10,7 @@ from evaulation import *
 from utils import tools
 
 ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-
+#ids = ['7nHkh4sP5Ks']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
@@ -40,19 +40,19 @@ def main():
         angles = []
         prev_labels = []
         trainLoader = Train_Loader(video_id=video_id, root_dir=video_id)
-        trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=False)
+        trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
 
         for images, labels in trainLoaded:
             for i in range(len(images)):
                 actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
                 # print(i)
-                # print(labels['label'][i])
-                # tools.plot_frame(images[i].numpy())
+                #print(labels['label'][i])
+                #tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_angles=angles, prev_labels=prev_labels)
                 prediction, angles, prev_labels = asd.model()
                 # print(angles)
                 # print(prev_labels)
-                # print('------------')
+                #print('------------')
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
                 counts[0] += tp
                 counts[1] += fp

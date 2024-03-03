@@ -10,7 +10,7 @@ from utils import tools
 landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
-    def __init__(self, frame, face_thresh: float = 0.25, angle_thresh: tuple = (0.73, 0.71), prev_angles: list = [], prev_labels: list = []):
+    def __init__(self, frame, face_thresh: float = 0.25, angle_thresh: tuple = (0.78, 0.742), prev_angles: list = [], prev_labels: list = []):
         self.frame = frame.numpy()
         self.prev_centre_lip = (0, 0)
         self.prev_angles = prev_angles
@@ -40,7 +40,22 @@ class ActiveSpeaker():
                 lip_box = [left[0]-2, centre_upper[1]-2, right[0]+2, centre_lower[1]+2]
 
                 # Get area of lips from face
-                # lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
+                lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
+                lip_gray = cv2.cvtColor(lip_region, cv2.COLOR_BGR2GRAY)
+                # b,g,r = cv2.split(lip_region)
+                # hist_r = cv2.calcHist([r], [0], None, [256], [0, 256])
+                # hist_b= cv2.calcHist([b], [0], None, [256], [0, 256])
+                # hist_g = cv2.calcHist([g], [0], None, [256], [0, 256])
+                # hist = hist_b + hist_g + hist_r
+
+                # # hist = cv2.calcHist([lip_region], [0], None, [256], [0, 256])
+                # # tools.plot_hist(lip_region)
+
+                # sd = np.var(hist)
+                # # print(sd)
+                # plt.plot(hist)
+                # plt.show()
+
 
                 speaking, left, right = self.speaker_detection(face_region, lip_pixels, lip_box)
                 # print('prev',self.prev_angles)
