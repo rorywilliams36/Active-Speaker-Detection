@@ -9,8 +9,8 @@ from model import ActiveSpeaker
 from evaulation import *
 from utils import tools
 
-ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-#ids = ['7nHkh4sP5Ks']
+# ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
+ids = ['7nHkh4sP5Ks']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
@@ -26,19 +26,12 @@ def main():
 
     # args = parser.parse_args()
 
-    #trainLoader = Train_Loader(video_id='_mAfwH6i90E', root_dir='_mAfwH6i90E')
-    #trainLoader = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
-    #trainLoader = Train_Loader(video_id='7nHkh4sP5Ks', root_dir='7nHkh4sP5Ks')
-    # trainLoader = Train_Loader(video_id='2fwni_Kjf2M', root_dir='2fwni_Kjf2M')
-    # trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
-
     counts = [0,0,0,0] # tp, fp, tn, fn
     a_total = 0
     
     for video_id in ids:
         vid_counts = [0,0,0,0]
-        angles = []
-        prev_labels = []
+        prev_frames = []
         trainLoader = Train_Loader(video_id=video_id, root_dir=video_id)
         trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
 
@@ -48,8 +41,8 @@ def main():
                 # print(i)
                 #print(labels['label'][i])
                 #tools.plot_frame(images[i].numpy())
-                asd = ActiveSpeaker(images[i], prev_angles=angles, prev_labels=prev_labels)
-                prediction, angles, prev_labels = asd.model()
+                asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
+                prediction, prev_frames = asd.model()
                 # print(angles)
                 # print(prev_labels)
                 #print('------------')
@@ -67,7 +60,6 @@ def main():
         a_total += trainLoader.__len__()
         p, r, fm = metrics(vid_counts)
         non_p, non_r, non_fm = metrics([vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]])
-
 
         print(f'\nSpeakers: {video_id}')
         print('TP,FP,TN,FN: ',vid_counts)
