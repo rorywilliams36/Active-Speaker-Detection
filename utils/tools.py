@@ -131,3 +131,12 @@ def plot_color_space(img):
     ax = plt.axes(projection='3d')
     ax.scatter(R,G,B, c=img_rgb.reshape((-1, 3)))
     plt.show()
+
+def plot_points(img, points):
+    for point in points:
+        x = point[0]
+        y = point[1]
+        cv2.circle(img, (x, y), 1, color=(0,255,0))
+    cv2.imshow('img', img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
