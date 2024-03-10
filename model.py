@@ -37,15 +37,15 @@ class ActiveSpeaker():
 
                 # Get area of lips from face
                 lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
-                lip_gray = cv2.cvtColor(lip_region, cv2.COLOR_BGR2GRAY)
- 
+                # lip_gray = cv2.cvtColor(lip_region, cv2.COLOR_BGR2GRAY)
+  
                 speaking, left, right = self.speaker_detection(face_region, lip_pixels, lip_box)
-                prev_frames = self.update_stacks(self.prev_frames, self.frame)
+                prev_frames = self.update_stacks(self.prev_frames, self.frame, 3)
 
                 predicted['faces'].append(face[3:7])
                 predicted['label'].append(speaking)
         
-        return predicted, []
+        return predicted, self.prev_frames
 
     def speaker_detection(self, face_region, lip_pixels, lip_box):
         score = 0
@@ -110,10 +110,40 @@ class ActiveSpeaker():
         face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
         gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
-        points = landmarks(gray, dlib.rectangle(3, 3, H-3, H-3))
+        points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
         points = face_utils.shape_to_np(points)
+
+        if len(points) > 0:
+            self.optic_flow(points[48:-1])
+            #tools.plot_points(self.frame, points)
+
+            tools.plot_frame(self.frame)
 
         try:
             return face_region, points[48:-1]
         except:
             return [], []
+
+    def optic_flow(self, points):
+        if len(self.prev_frames) > 1:
+            points = points.astype(np.float32)
+            prev_frame = self.prev_frames[-1]
+            prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+            current = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+
+            # Parameters for Lucas Kanade optical flow
+            lk_params = dict(
+                winSize=(15,15),
+                maxLevel=2,
+                criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
+            )
+    
+            # Calculate Optical Flow
+            flow, status, error = cv2.calcOpticalFlowPyrLK(
+                prev_frame, current, points, None, **lk_params
+            )
+
+            print('Prev:', points)
+            print('flow:', flow)
+            #tools.plot_frame(self.frame)
+            #quit()

@@ -9,8 +9,8 @@ from model import ActiveSpeaker
 from evaulation import *
 from utils import tools
 
-# ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-ids = ['7nHkh4sP5Ks']
+# ids = [ 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
+ids = ['-5KQ66BBWC4']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
@@ -33,7 +33,7 @@ def main():
         vid_counts = [0,0,0,0]
         prev_frames = []
         trainLoader = Train_Loader(video_id=video_id, root_dir=video_id)
-        trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=True)
+        trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=False)
 
         for images, labels in trainLoaded:
             for i in range(len(images)):
