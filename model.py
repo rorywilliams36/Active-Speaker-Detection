@@ -10,7 +10,7 @@ from utils import tools
 landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
-    def __init__(self, frame, face_thresh: float = 0.25, angle_thresh: tuple = (0.78, 0.74), prev_frames: list = []):
+    def __init__(self, frame, face_thresh: float = 0.5, angle_thresh: tuple = (0.78, 0.74), prev_frames: list = []):
         self.frame = frame.numpy()
         self.prev_frames = prev_frames
         self.face_thresh = face_thresh
@@ -19,8 +19,8 @@ class ActiveSpeaker():
     def model(self):
         face_detect = FaceDetection(self.frame, threshold=self.face_thresh)
         faces = face_detect.detect()
+
         predicted = {'faces' : [], 'label' : []}
-        # print(len(faces))
         for face in faces:
             face_region, lip_pixels = self.feature_detection(face)
 
@@ -111,23 +111,24 @@ class ActiveSpeaker():
         gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
         points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
+
         points = face_utils.shape_to_np(points)
 
         if len(points) > 0:
-            self.optic_flow(points[48:-1])
-            #tools.plot_points(self.frame, points)
+            self.optic_flow(points[48:-1], face_region)
+            tools.plot_points(self.frame, points)
 
-            tools.plot_frame(self.frame)
+            #tools.plot_frame(face_region)
 
         try:
             return face_region, points[48:-1]
         except:
             return [], []
 
-    def optic_flow(self, points):
+    def optic_flow(self, points, face_region):
         if len(self.prev_frames) > 1:
             points = points.astype(np.float32)
-            prev_frame = self.prev_frames[-1]
+            prev_frame = self.prev_frames[0]
             prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
             current = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
@@ -138,12 +139,13 @@ class ActiveSpeaker():
                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
             )
     
-            # Calculate Optical Flow
+            key_points = np.array([points[0], points[3], points[6], points[9], points[12], points[14], points[16], points[18]]).astype(np.float32)
+
             flow, status, error = cv2.calcOpticalFlowPyrLK(
-                prev_frame, current, points, None, **lk_params
+                prev_frame, current, key_points, None, **lk_params
             )
 
-            print('Prev:', points)
+            print('Prev:', key_points)
             print('flow:', flow)
-            #tools.plot_frame(self.frame)
-            #quit()
+            print('diff: ', key_points - flow)
+

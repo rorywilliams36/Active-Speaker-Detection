@@ -10,7 +10,7 @@ from evaulation import *
 from utils import tools
 
 # ids = [ 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-ids = ['-5KQ66BBWC4']
+ids = ['20TAGRElvfE']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
@@ -38,14 +38,14 @@ def main():
         for images, labels in trainLoaded:
             for i in range(len(images)):
                 actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
-                # print(i)
-                #print(labels['label'][i])
+                # print()
+                # print(labels['label'][i])
                 #tools.plot_frame(images[i].numpy())
-                asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
+                asd = ActiveSpeaker(images[i], prev_frames=prev_frames, prev_faces=prev_faces)
                 prediction, prev_frames = asd.model()
                 # print(angles)
                 # print(prev_labels)
-                #print('------------')
+                # print('------------')
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
                 counts[0] += tp
                 counts[1] += fp
