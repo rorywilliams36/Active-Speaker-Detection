@@ -14,7 +14,6 @@ ids = ['20TAGRElvfE']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
-    # parser.add_argument('--epoch', type=int, default=15, help="Number of epochs")
     # parser.add_argument('--face_detect_threshold', type=float, default='0.5', help="Confidence score for face detection")
     # parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     
@@ -39,8 +38,8 @@ def main():
         for images, labels in trainLoaded:
             for i in range(len(images)):
                 actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
-                print()
-                print(labels['label'][i])
+                # print()
+                # print(labels['label'][i])
                 #tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
                 prediction, prev_frames, img_diff = asd.model()
@@ -51,7 +50,7 @@ def main():
                 else:
                     non_speaker_diff.append(img_diff)
 
-                print('------------')
+                # print('------------')
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
                 counts[0] += tp
                 counts[1] += fp
@@ -66,48 +65,34 @@ def main():
         p, r, fm = metrics(vid_counts)
         non_p, non_r, non_fm = metrics([vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]])
 
-        print(f'\nSpeakers: {video_id}')
-        print('TP,FP,TN,FN: ',vid_counts)
-        print('Correct: ', vid_counts[0]+vid_counts[2])
-        print('Total: ', np.sum(vid_counts))
-        print('Actual Total: ', trainLoader.__len__())
-        print('Precision: ', p)
-        print('Recall: ', r)
-        print('F-Measure: ', fm)
-        print(speaker_diff)
-
-        print(f'\nNon-Speakers')
-        print('Precision: ', non_p)
-        print('Recall: ', non_r)
-        print('F-Measure: ', non_fm)
-        print(non_speaker_diff)
-        print('--------------------')
+        display_results('SPEAKING', vid_counts, p, r, fm)
+        display_results('NON-SPEAKING', [vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]], non_p, non_r, non_fm)
 
         a_total += trainLoader.__len__()
 
     p, r, fm = metrics(counts)
-
-    print('\nGENERAL')
-    print('TP,FP,TN,FN: ', counts)
-    print('Correct: ', counts[0]+counts[2])
-    print('Total: ', np.sum(counts))
-    print('Actual Total ', a_total)
-    print('\n----------- Speakers -----------')
-    print('Precision: ', p)
-    print('Recall: ', r)
-    print('F-Measure: ', fm)
-
     non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
 
-    print('\n----------- Non-Speakers -----------')
-    print('Precision: ', non_p)
-    print('Recall: ', non_r)
-    print('F-Measure: ', non_fm)
 
+    display_results('GENERAL-SPEAKING', counts, p, r, fm)
+    display_results('GENERAL-NON-SPEAKING', [counts[2], counts[3], counts[0], counts[1]],  non_p, non_r, non_fm)
+
+    print('Total: ', np.sum(counts))
+    print('Number of Frames ', a_total)
     print('\nAverage Precision: ', (p + non_p) /2)
     print('Macro F1: ', (non_fm+fm) /2)
 
     # conf_matrix(counts[0], counts[1], counts[2], counts[3])
+
+# Function to print results
+def display_results(title, counts, p, r, f):
+    print(f'\n----------- {title} -----------')
+    print('TP,FP,TN,FN: ',counts)
+    print('Correct: ', counts[0]+counts[2])
+    print('Precision: ', p)
+    print('Recall: ', r)
+    print('F-Measure: ', f)
+
 
 
 if __name__ == "__main__":

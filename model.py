@@ -19,6 +19,7 @@ class ActiveSpeaker():
     def model(self):
         face_detect = FaceDetection(self.frame, threshold=self.face_thresh)
         faces = face_detect.detect()
+        img_diff = []
 
         predicted = {'faces' : [], 'label' : []}
         for face in faces:
@@ -118,9 +119,9 @@ class ActiveSpeaker():
             diff = self.optic_flow(points[48:-1], face_region)
 
         try:
-            return face_region, points[48:-1]
+            return face_region, points[48:-1], diff
         except:
-            return [], []
+            return [], [], []
 
     def optic_flow(self, points, face_region):
         if len(self.prev_frames) > 1:
