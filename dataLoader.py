@@ -83,7 +83,6 @@ class Train_Loader(Dataset):
         alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
         return sorted(frames, key=alphanum_key)
 
-            
     # Temporary workaround
     # Due to all tensors loaded having to be the same length if a frame has multiple labels only one is loaded 
     # This extracts and gets all labels for the corresponding frame
@@ -171,9 +170,6 @@ def convert_label_to_tensor(label):
 
     return label_tensors
     
-
-
-
 if __name__ == "__main__":
     ds = Train_Loader(video_id='_mAfwH6i90E', root_dir='_mAfwH6i90E')
     # ds = Train_Loader(video_id='AYebXQ8eUkM', root_dir='AYebXQ8eUkM')

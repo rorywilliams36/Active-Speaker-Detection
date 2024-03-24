@@ -56,6 +56,7 @@ def plot_faces_detected(frame, faces):
         # Draw a rectangle around the face
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
+    frame = cv2.resize(frame, (400,400))
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -137,6 +138,7 @@ def plot_points(img, points):
         x = point[0]
         y = point[1]
         cv2.circle(img, (x, y), 1, color=(0,255,0))
+    img = cv2.resize(img, (300,300))
     cv2.imshow('img', img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

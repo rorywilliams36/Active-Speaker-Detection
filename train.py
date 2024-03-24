@@ -9,7 +9,7 @@ from model import ActiveSpeaker
 from evaulation import *
 from utils import tools
 
-# ids = [ 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
+# ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
 ids = ['20TAGRElvfE']
 
 def main():
@@ -28,7 +28,8 @@ def main():
 
     counts = [0,0,0,0] # tp, fp, tn, fn
     a_total = 0
-    
+    speaker_diff = []
+    non_speaker_diff = []
     for video_id in ids:
         vid_counts = [0,0,0,0]
         prev_frames = []
@@ -38,14 +39,19 @@ def main():
         for images, labels in trainLoaded:
             for i in range(len(images)):
                 actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
-                # print()
-                # print(labels['label'][i])
+                print()
+                print(labels['label'][i])
                 #tools.plot_frame(images[i].numpy())
-                asd = ActiveSpeaker(images[i], prev_frames=prev_frames, prev_faces=prev_faces)
-                prediction, prev_frames = asd.model()
+                asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
+                prediction, prev_frames, img_diff = asd.model()
                 # print(angles)
                 # print(prev_labels)
-                # print('------------')
+                if labels['label'][i] == "Speaking":
+                    speaker_diff.append(img_diff)
+                else:
+                    non_speaker_diff.append(img_diff)
+
+                print('------------')
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
                 counts[0] += tp
                 counts[1] += fp
@@ -57,7 +63,6 @@ def main():
                 vid_counts[2] += tn
                 vid_counts[3] += fn
 
-        a_total += trainLoader.__len__()
         p, r, fm = metrics(vid_counts)
         non_p, non_r, non_fm = metrics([vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]])
 
@@ -69,11 +74,13 @@ def main():
         print('Precision: ', p)
         print('Recall: ', r)
         print('F-Measure: ', fm)
+        print(speaker_diff)
 
         print(f'\nNon-Speakers')
         print('Precision: ', non_p)
         print('Recall: ', non_r)
         print('F-Measure: ', non_fm)
+        print(non_speaker_diff)
         print('--------------------')
 
         a_total += trainLoader.__len__()

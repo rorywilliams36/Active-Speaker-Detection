@@ -22,7 +22,7 @@ class ActiveSpeaker():
 
         predicted = {'faces' : [], 'label' : []}
         for face in faces:
-            face_region, lip_pixels = self.feature_detection(face)
+            face_region, lip_pixels, img_diff = self.feature_detection(face)
 
             # Set lip pixels values
             speaking = 'NOT_SPEAKING' 
@@ -37,15 +37,14 @@ class ActiveSpeaker():
 
                 # Get area of lips from face
                 lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
-                # lip_gray = cv2.cvtColor(lip_region, cv2.COLOR_BGR2GRAY)
   
-                speaking, left, right = self.speaker_detection(face_region, lip_pixels, lip_box)
+                speaking = self.speaker_detection(face_region, lip_pixels, lip_box)
                 prev_frames = self.update_stacks(self.prev_frames, self.frame, 3)
 
                 predicted['faces'].append(face[3:7])
                 predicted['label'].append(speaking)
         
-        return predicted, self.prev_frames
+        return predicted, self.prev_frames, img_diff
 
     def speaker_detection(self, face_region, lip_pixels, lip_box):
         score = 0
@@ -59,9 +58,10 @@ class ActiveSpeaker():
         left_angle = self.mouth_angle(centre_lower, left, centre_lip) + self.mouth_angle(centre_upper, left, centre_lip)
         right_angle = self.mouth_angle(centre_lower, right, centre_lip) + self.mouth_angle(centre_upper, right, centre_lip)
 
+        # print(left_angle, right_angle)
         if left_angle > self.angle_thresh[0] or right_angle > self.angle_thresh[1]:
-            return 'SPEAKING', left_angle, right_angle
-        return 'NOT_SPEAKING', left_angle, right_angle
+            return 'SPEAKING'
+        return 'NOT_SPEAKING'
 
     def kalman(self):
         pass
@@ -115,10 +115,7 @@ class ActiveSpeaker():
         points = face_utils.shape_to_np(points)
 
         if len(points) > 0:
-            self.optic_flow(points[48:-1], face_region)
-            tools.plot_points(self.frame, points)
-
-            #tools.plot_frame(face_region)
+            diff = self.optic_flow(points[48:-1], face_region)
 
         try:
             return face_region, points[48:-1]
@@ -128,7 +125,7 @@ class ActiveSpeaker():
     def optic_flow(self, points, face_region):
         if len(self.prev_frames) > 1:
             points = points.astype(np.float32)
-            prev_frame = self.prev_frames[0]
+            prev_frame = self.prev_frames[-1]
             prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
             current = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
@@ -145,7 +142,10 @@ class ActiveSpeaker():
                 prev_frame, current, key_points, None, **lk_params
             )
 
-            print('Prev:', key_points)
-            print('flow:', flow)
-            print('diff: ', key_points - flow)
+            # print('Prev:', key_points)
+            # print('flow:', flow)
+            diff = key_points - flow
+            # print('diff: ', diff)
 
+            return diff
+        return []

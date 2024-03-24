@@ -17,11 +17,19 @@ def split_into_frames(video_id):
 
     output = f'/dataset/{video_id}'
     cap = cv2.VideoCapture(f'{current_path}/dataset/{video_id}.mkv')
-    cap.set(cv2.CAP_PROP_FPS, 20)
 
-    if not os.path.exists(f'{current_path}/{output}'):
-        os.makedirs(f'{current_path}/{output}')
+    start = labels.at[0, 'Timestamp'] - 0.04
+    fps = cap.get(cv2.CAP_PROP_FPS)
 
+    if fps == 30:
+        skip = 3
+    else: 
+        skip = 2.5
+        
+    # if not os.path.exists(f'{current_path}/{output}'):
+    #     os.makedirs(f'{current_path}/{output}')
+
+    frame_count = 0
     count = 0
     while True:
         ret, frame = cap.read()
@@ -32,20 +40,23 @@ def split_into_frames(video_id):
         # Converts milliseconds to seconds ot match the timestamps in the labels
             norm_time = round((timestamp / 1000), 2) 
             # Only gets frames with a corresponding label
-            if norm_time >= (labels.at[0, "Timestamp"] - 0.04) and count <= 500:
-                print(norm_time)
+            if norm_time >= 1200 and count <= 250:
                 for i in range(len(labels)):
                     label_timestamp = labels.at[i, "Timestamp"]
-                    if label_timestamp > (norm_time + 0.2):
-                        break
+                    if frame_count % skip == 0:                    
+                        if (label_timestamp == norm_time) or ((label_timestamp >= (norm_time - 0.02)) and (label_timestamp <= (norm_time + 0.02))):
+                            cv2.imwrite(f'{current_path}/dataset/trial/{video_id}_{label_timestamp}.jpg', frame)
+                            print(count)
+                            print(norm_time)
+                            print(label_timestamp)
+                            count += 1
+                            break
 
-                    if (label_timestamp == norm_time) or ((label_timestamp >= (norm_time - 0.02)) and (label_timestamp <= (norm_time + 0.02))):
-                        cv2.imwrite(f'{current_path}/{output}/{video_id}_{label_timestamp}.jpg', frame)
-                        count += 1
-                        break
-                
+            frame_count += 1
+  
             if count > 500:
                 break
+
 
         else:
             print('Error occured whilst prepping video')
@@ -79,7 +90,15 @@ def get_face_track_from_coords(face, coords):
         return True
     return False
 
+def get_frame_rate(video_id):
+    cap = cv2.VideoCapture(f'{current_path}/dataset/{video_id}.mkv')
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    cap.release()
+    return fps
+
 if __name__ == "__main__":
-    # split_into_frames('_mAfwH6i90E')
+    # ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M'] #, '8VZEwOCQ8bc']
     split_into_frames('B1MAUxpKaV8')
+    # for i in ids:
+    #     print(i, get_frame_rate(i))
     # download_files(f'{URL}/{train_files[0]}', 'B1MAUxpKaV8')
