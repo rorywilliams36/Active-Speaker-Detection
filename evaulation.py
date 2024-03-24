@@ -31,7 +31,7 @@ def eval_face_detection(predicteds, actuals):
 
     else:
         for prediction in predicteds:
-            if face_evaluate(prediction, actual):
+            if face_evaluate(prediction, actuals[1]):
                 correct += 1
 
         total = 1
