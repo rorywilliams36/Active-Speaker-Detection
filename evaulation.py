@@ -71,34 +71,13 @@ def evaluate(prediction, actual):
         for i in range(len(a_faces)):
             for j in range(len(p_faces)):
                 if face_evaluate(p_faces[j], a_faces[i]):
-                    if p_labels[j] == a_label[i]:
-                        if p_labels[j] == 'SPEAKING':
-                            tp += 1
-                        else:
-                            tn += 1
-                        break
-                    else:
-                        if p_labels[j] == 'SPEAKING' and a_label[i] != 'SPEAKING':
-                            fp += 1
-                        else:
-                            fn += 1
-                        break
+                    tp, fp, tn, fn = label_eval(p_labels[j], a_label[i], [tp,fp,tn,fn])
+
                         
     else:
         for j in range(len(p_faces)):
             if face_evaluate(p_faces[j], a_faces):
-                if p_labels[j] == a_label:
-                    if p_labels[j] == 'SPEAKING':
-                        tp += 1
-                    else:
-                        tn += 1
-                    break
-                else:
-                    if p_labels[j] == 'SPEAKING' and a_label != 'SPEAKING':
-                        fp += 1
-                    else:
-                        fn += 1
-                    break
+                tp, fp, tn, fn = label_eval(p_labels[j], a_label, [tp,fp,tn,fn])
 
     return tp, fp, tn, fn
 
@@ -111,6 +90,21 @@ def face_evaluate(prediction, actual):
     if (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2):
         return True
     return False
+
+def label_eval(prediction, actual, counts):
+    tp, fp, tn, fn = counts
+    if prediction == actual:
+        if prediction == 'SPEAKING':
+            tp += 1
+        else:
+            tn += 1
+    else:
+        if prediction == 'SPEAKING' and actual != 'SPEAKING':
+            fp += 1
+        else:
+            fn += 1
+
+    return tp, fp, tn, fn
 
 def metrics(counts):
     tp,fp,tn,fn = counts
