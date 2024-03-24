@@ -53,6 +53,7 @@ def evaluate(prediction, actual):
     tn = 0
     fn = 0
 
+    # Get face bound boxes for the labels
     if torch.is_tensor(actual[1]):
         a_faces = actual[1].numpy()
     else:
@@ -62,18 +63,20 @@ def evaluate(prediction, actual):
     p_faces = prediction['faces']
     p_labels = prediction['label']
 
+    # If no label is returned for the frame 
     if len(p_labels) == 0 or len(p_faces) == 0:
-        if len(a_faces.shape) > 1:
-            return 0,0,0,0
         return 0,0,0,0 
 
+    # Evaluates if there is more than one label for the frame
     if len(a_faces.shape) > 1:
         for i in range(len(a_faces)):
             for j in range(len(p_faces)):
+                # Checks if bounding box for face detected is correct
+                # Then compares the predicted label with the actual label and returns the counts
                 if face_evaluate(p_faces[j], a_faces[i]):
                     tp, fp, tn, fn = label_eval(p_labels[j], a_label[i], [tp,fp,tn,fn])
-
-                        
+       
+    # Evaluation for frames with single labels   
     else:
         for j in range(len(p_faces)):
             if face_evaluate(p_faces[j], a_faces):
@@ -82,6 +85,9 @@ def evaluate(prediction, actual):
     return tp, fp, tn, fn
 
 
+# Evaluation for face detection
+# Since the coords for bound boxes are normalised we check if they contain the same centre coordinate
+# This is also because each bound box detected aren't exactly the same size/area
 def face_evaluate(prediction, actual):
     x1, y1, x2, y2 = prediction * 300
     a_x1, a_y1, a_x2, a_y2 = actual * 300
@@ -91,6 +97,7 @@ def face_evaluate(prediction, actual):
         return True
     return False
 
+# Function to compare the predicted label with the actual and update the metrics
 def label_eval(prediction, actual, counts):
     tp, fp, tn, fn = counts
     if prediction == actual:
@@ -106,6 +113,7 @@ def label_eval(prediction, actual, counts):
 
     return tp, fp, tn, fn
 
+# Calculates evaluation metrics from the give counts
 def metrics(counts):
     tp,fp,tn,fn = counts
     if tp+fp == 0:
@@ -128,6 +136,7 @@ def metrics(counts):
 def mean_avg_precision():
     pass
 
+# Calculates confusion matrix using seaborn
 def conf_matrix(tp,fp,tn,fn):
     sns.heatmap([[tn, fp],[fn, tp]], cmap='crest', annot=True, fmt='.0f', 
                 xticklabels=['NOT_SPEAKING', 'SPEAKING'], yticklabels=['NOT_SEAKING', 'SPEAKING'])
