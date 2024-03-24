@@ -36,7 +36,7 @@ def eval_face_detection(predicteds, actuals):
 
         total = 1
             
-    return count, total
+    return correct, total
 
 
 # Evaluation function for the prediction and actual label
