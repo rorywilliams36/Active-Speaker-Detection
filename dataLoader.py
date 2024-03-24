@@ -1,8 +1,11 @@
-import os, cv2, torch, glob
+import os, cv2, torch, glob, re
 import pandas as pd
 import numpy as np 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
+import matplotlib.pyplot as plt
+
+from utils import tools
 
 current_path = os.getcwd()
 ID_LIST = open(f'{current_path}/dataset/ava_speech_file_names_v1.txt', 'r')
@@ -24,7 +27,7 @@ class Train_Loader(Dataset):
         self.root_dir = root_dir # directory holding the data/frames
         self.data_path = os.path.join(f'{current_path}/dataset', self.root_dir) # path to respective dataset folder
         self.video_id = video_id
-        self.frames = glob.glob(f"{self.data_path}/*.jpg")
+        self.frames = self.sort_frames()
         self.labels = self.prep_labels()
 
     # Returns number of items in dataset
@@ -63,21 +66,23 @@ class Train_Loader(Dataset):
     def prep_labels(self):
         # Gets the last frame recorded
         frame_name = (self.frames[-1]).split('/')[-1].split('\\')[-1]
-        last = float(frame_name.split('_')[-1].split('.jpg')[0])
 
         # Read csv file and create columns
         labels_df = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv')
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
+        labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
+        labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
 
-        # slice to the last frame recorded
-        spliced_labels = labels_df.loc[labels_df['Timestamp'] <= last]
+        return labels_df
 
-        # Normalise labels
-        spliced_labels = spliced_labels.replace('SPEAKING_AUDIBLE', 'SPEAKING')
-        spliced_labels = spliced_labels.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
+    # Since file are returned in arbitary order we sort them by timestamp
+    # Credit: https://stackoverflow.com/questions/4813061/non-alphanumeric-list-order-from-os-listdir/48030307#48030307
+    def sort_frames(self):
+        frames = glob.glob(f"{self.data_path}/*.jpg")
+        convert = lambda text: int(text) if text.isdigit() else text.lower()
+        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
+        return sorted(frames, key=alphanum_key)
 
-        return spliced_labels
-            
     # Temporary workaround
     # Due to all tensors loaded having to be the same length if a frame has multiple labels only one is loaded 
     # This extracts and gets all labels for the corresponding frame
@@ -132,15 +137,12 @@ class Val_Loader(Dataset):
 # Transforms the image by resizing and turning to grayscale
 def transform_frame(frame):
     H = 300
-    # frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=3)
-    # frame = cv2.bilateralFilter(frame, 5, 75, 75)
-    frame = cv2.GaussianBlur(frame, (5,5), 2)
+    frame = cv2.GaussianBlur(frame, (5,5), 2.5)
     img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     img_hsv[:,:,2] = cv2.equalizeHist(img_hsv[:,:,2])
     frame = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
     frame = cv2.resize(frame, (H, H))
     return frame
-
 
 # Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
 def create_labels_dict(labels):
@@ -168,16 +170,13 @@ def convert_label_to_tensor(label):
 
     return label_tensors
     
-
-
-
 if __name__ == "__main__":
-    # ds = Train_Loader(video_id='_mAfwH6i90E')
-    ds = Train_Loader(video_id='B1MAUxpKaV8', root_dir='B1MAUxpKaV8')
-
-    for i in range(len(ds.frames)):
-        _, labels = ds.__getitem__(i)
-        print(labels)
+    ds = Train_Loader(video_id='_mAfwH6i90E', root_dir='_mAfwH6i90E')
+    # ds = Train_Loader(video_id='AYebXQ8eUkM', root_dir='AYebXQ8eUkM')
+    print(ds.frames)
+    # for i in range(len(ds.frames)):
+    #     _, labels = ds.__getitem__(i)
+    #     print(labels)
 
     # show_labels(frame, label)
     # print(ds.labels)
