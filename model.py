@@ -42,56 +42,25 @@ class ActiveSpeaker():
                 # Get area of lips from face
                 lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
                 lip_gray = cv2.cvtColor(lip_region, cv2.COLOR_BGR2GRAY)
-                # b,g,r = cv2.split(lip_region)
-                # hist_r = cv2.calcHist([r], [0], None, [256], [0, 256])
-                # hist_b= cv2.calcHist([b], [0], None, [256], [0, 256])
-                # hist_g = cv2.calcHist([g], [0], None, [256], [0, 256])
-                # hist = hist_b + hist_g + hist_r
-
-                # # hist = cv2.calcHist([lip_region], [0], None, [256], [0, 256])
-                # # tools.plot_hist(lip_region)
-
-                # sd = np.var(hist)
-                # # print(sd)
-                # plt.plot(hist)
-                # plt.show()
-
 
                 speaking, left, right = self.speaker_detection(face_region, lip_pixels, lip_box)
-                # print('prev',self.prev_angles)
                 prev_angles = self.update_stacks(self.prev_angles, (left, right))
-                # print('prev',self.prev_angles)
                 prev_labels = self.update_stacks(self.prev_labels, speaking)
-
-                # cv2.circle(face_region, (left[0], left[1]), 1, (255,0,0), -1)
-                # cv2.circle(face_region, (centre_lower[0], centre_lower[1]), 1, (255,0,0), -1)
-                # cv2.circle(face_region, (right[0], right[1]), 1, (255,0,0), -1)
-                # cv2.circle(face_region, (centre_upper[0], centre_upper[1]), 1, (255,0,0), -1)
-                # tools.plot_frame(face_region)
 
                 predicted['faces'].append(face[3:7])
                 predicted['label'].append(speaking)
                 
-                # tools.plot_box(face_region, lip_box)
-                # lips = cv2.resize(lip_region, (256, 128))
-                # cv2.imshow('lips', lips)
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
-                # print('prev',prev_angles)
-        
         return predicted, self.prev_angles, self.prev_labels
 
     def speaker_detection(self, face_region, lip_pixels, lip_box):
         score = 0
         centre_lip = ((lip_box[0] + lip_box[2])/2, (lip_box[1] + lip_box[-1])/2)
-        # centre_lip2 = (round(centre_lip[0]), round(centre_lip[1]))
 
         centre_upper = lip_pixels[3]
         centre_lower = lip_pixels[9]
         left = lip_pixels[0]
         right = lip_pixels[6]
 
-        #left_to_bot = self.mouth_angle(centre_lower, left, centre_lip)
         left_angle = self.mouth_angle(centre_lower, left, centre_lip) + self.mouth_angle(centre_upper, left, centre_lip)
         right_angle = self.mouth_angle(centre_lower, right, centre_lip) + self.mouth_angle(centre_upper, right, centre_lip)
 
@@ -111,8 +80,6 @@ class ActiveSpeaker():
         # cv2.line(face_region, centre_lip2, right, color=(0,0,255),thickness=1)
         # cv2.line(face_region, centre_lower, right, color=(0,0,255), thickness=1)
 
-
-        #print(left_angle, right_angle)
         if score >= 3.5:
             return 'SPEAKING', left_angle, right_angle
         return 'NOT_SPEAKING', left_angle, right_angle

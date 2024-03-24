@@ -9,8 +9,8 @@ from model import ActiveSpeaker
 from evaulation import *
 from utils import tools
 
-ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-#ids = ['7nHkh4sP5Ks']
+# ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
+ids = ['_mAfwH6i90E']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
@@ -83,8 +83,6 @@ def main():
         print('Recall: ', non_r)
         print('F-Measure: ', non_fm)
         print('--------------------')
-
-        a_total += trainLoader.__len__()
 
     p, r, fm = metrics(counts)
 
