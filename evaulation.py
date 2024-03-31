@@ -12,30 +12,48 @@ Compare predicted labels with actual labels
 
 '''
 
-# General evaluation for face detection
-def eval_face_detection(predicteds, actuals):
-    correct = 0
-    if len(predicteds) == 0 or len(actuals) == 0:
-        if not torch.is_tensor(actuals[1]):
-            return 0, len(actuals[1])
-        return 0, 1
+def gen_face_evaluation(prediction, actual):
+    '''
+    Function to return whether face detected is correct
 
-    if not torch.is_tensor(actuals[1]):
-        for prediction in predicteds:
-            x1, y1, x2, y2 = prediction[3:7] * 300
-            for actual in actuals[1]:
-                if face_evaluate(prediction, actual):
+    Params:
+        prediction: array of faces detected
+        actual: Annotations/labels for the frame
+
+    Return: Correct count, total faces count
+    '''
+    correct = 0
+    # Get face bound boxes for the labels
+    if torch.is_tensor(actual[1]):
+        a_faces = actual[1].numpy()
+    else:
+        a_faces = actual[1]
+
+    # Gets number of faces in frame
+    if len(a_faces.shape) > 1:
+        total = a_faces.shape[0]
+    else:
+        total = 1
+
+    # If no label is returned for the frame 
+    if len(prediction) == 0:
+        return 0, total
+
+    # Evaluates if there is more than one label for the frame
+    if len(a_faces.shape) > 1:
+        for i in range(len(a_faces)):
+            for j in range(len(prediction)):
+                # Checks if bounding box for face detected is correct
+                # Then compares the predicted label with the actual label and returns the counts
+                if face_evaluate(prediction[j][3:7], a_faces[i]):
                     correct += 1
 
-        total = len(actuals[1])
-
+    # Evaluation for frames with single labels   
     else:
-        for prediction in predicteds:
-            if face_evaluate(prediction, actuals[1]):
+        for j in range(len(prediction)):
+            if face_evaluate(prediction[j][3:7], a_faces):
                 correct += 1
-
-        total = 1
-            
+    
     return correct, total
 
 
