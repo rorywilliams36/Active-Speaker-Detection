@@ -12,7 +12,7 @@ Compare predicted labels with actual labels
 
 '''
 
-def gen_face_evaluation(prediction, actual):
+def general_face_evaluation(prediction, actual):
     '''
     Function to return whether face detected is correct
 
