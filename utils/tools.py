@@ -135,8 +135,8 @@ def plot_color_space(img):
 
 def plot_points(img, points):
     for point in points:
-        x = point[0]
-        y = point[1]
+        x = round(point[0])
+        y = round(point[1])
         cv2.circle(img, (x, y), 1, color=(0,255,0))
     img = cv2.resize(img, (300,300))
     cv2.imshow('img', img)
