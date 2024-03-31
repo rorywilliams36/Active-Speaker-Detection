@@ -6,11 +6,11 @@ from torch.utils.data import Dataset, DataLoader
 
 from dataLoader import Train_Loader, Val_Loader
 from model import ActiveSpeaker
-from evaulation import *
+from evaluation import *
 from utils import tools
 
 # ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-ids = ['20TAGRElvfE']
+ids = ['_mAfwH6i90E']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
@@ -38,9 +38,9 @@ def main():
         for images, labels in trainLoaded:
             for i in range(len(images)):
                 actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
-                # print()
-                # print(labels['label'][i])
-                #tools.plot_frame(images[i].numpy())
+                print()
+                print(labels['label'][i])
+                tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
                 prediction, prev_frames, img_diff = asd.model()
                 # print(angles)
@@ -50,7 +50,8 @@ def main():
                 else:
                     non_speaker_diff.append(img_diff)
 
-                # print('------------')
+                # tools.plot_frame(images[i].numpy())
+                print('------------')
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
                 counts[0] += tp
                 counts[1] += fp
