@@ -38,7 +38,8 @@ class ActiveSpeaker():
                 lip_region = self.frame[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
 
                 speaking = self.speaker_detection(face_region, lip_pixels, lip_box)
-                prev_frames = self.update_stacks(self.prev_frames, self.frame, 3)
+                
+                prev_frames = self.update_stacks(self.prev_frames, self.frame, pointer=3)
 
                 predicted['faces'].append(face[3:7])
                 predicted['label'].append(speaking)
@@ -83,8 +84,8 @@ class ActiveSpeaker():
 
     # Contains the values/items from the last 10 frames
     # Updates stack by adding new items and removing if greater than 10
-    def update_stacks(self, stack, item, pointer: int = 10 ):
-        if len(stack) > pointer:
+    def update_stacks(self, stack, item, pointer):
+        if len(stack) >= pointer:
             _ = stack.pop(0)
         stack = stack.append(item)
         return stack
@@ -103,7 +104,7 @@ class ActiveSpeaker():
         points = face_utils.shape_to_np(points)
 
         if len(points) > 0:
-            diff = self.sparse_optic_flow(points, face_region)
+            diff = self.sparse_optic_flow(points)
             self.dense_optic_flow(face, face_region)
             # if len(diff) > 0:
                 # Gets the maximum vertical movement
@@ -118,7 +119,7 @@ class ActiveSpeaker():
         except:
             return [], [], []
 
-    def sparse_optic_flow(self, points, lip_region):
+    def sparse_optic_flow(self, points):
         if len(self.prev_frames) > 0:
             points = points.astype(np.float32)
             prev_frame = self.prev_frames[-1]
@@ -145,7 +146,7 @@ class ActiveSpeaker():
             #     diff[i][0] /= lip_x
             #     diff[i][1] /= lip_y
 
-            print('diff: ', diff)
+            # print('diff: ', diff)
             # tools.plot_points(self.frame, key_points)
 
             return diff
@@ -157,10 +158,12 @@ class ActiveSpeaker():
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
             points = landmarks(face_region, dlib.rectangle(0,0,64,64))
             points = face_utils.shape_to_np(points)
+            #tools.plot_frame(face_region)
             mouth_region = points[48:-1]
             if len(points) > 0:
                 prev_frame = self.prev_frames[-1]
-                prev_face = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
+                prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
+                #tools.plot_frame(prev_face)
 
                 ### Change this so that face and frame are stored in the same dict
                 prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
@@ -172,6 +175,13 @@ class ActiveSpeaker():
 
                 # Gets magnitude and anglular values for the flow values
                 mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+
+                # Gets and finds the average of the vertical compoments of optic flow
+                flow_vertical = flow[..., 1]
+                flow_hori = flow[..., 0]
+                print(np.mean(flow_vertical, axis=0))
+                print(np.mean(flow_hori, axis=1))
+
 
             else:
                 print('speaker change')
