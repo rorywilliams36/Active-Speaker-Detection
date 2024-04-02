@@ -34,11 +34,9 @@ class ActiveSpeaker():
                 right = lip_pixels[6]
 
                 # Sets bounding box for lips
-                lip_box = [left[0]-2, centre_upper[1]-2, right[0]+2, centre_lower[1]+2]
+                lip_box = [left[0]-2, centre_upper[1]-5, right[0]+2, centre_lower[1]+5]
+                lip_region = self.frame[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
 
-                # Get area of lips from face
-                lip_region = face_region[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
-  
                 speaking = self.speaker_detection(face_region, lip_pixels, lip_box)
                 prev_frames = self.update_stacks(self.prev_frames, self.frame, 3)
 
@@ -63,9 +61,6 @@ class ActiveSpeaker():
         if left_angle > self.angle_thresh[0] or right_angle > self.angle_thresh[1]:
             return 'SPEAKING'
         return 'NOT_SPEAKING'
-
-    def kalman(self):
-        pass
 
     def mouth_angle(self, point1, point2, centre_point):
         '''
@@ -98,33 +93,33 @@ class ActiveSpeaker():
     def feature_detection(self, face):
         h, w = self.frame.shape[:2]
         H = 64
-        # Gets coordinates of bounding box
-        x1, y1, x2, y2 = face[3:7] * h
-
-        # Grabs extra pixels around box to account for errors and also check ranges
-        x1 = max(round(float(x1))-5, 0)
-        y1 = max(round(float(y1))-5, 0)
-        x2 = min(round(float(x2))+5, w)
-        y2 = min(round(float(y2))+5, h)
+        x1,y1,x2,y2 = self.get_face_coords(face, h, w)
 
         # Extracts and resizes the face detected from the frame
         face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
         gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
         points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
-
         points = face_utils.shape_to_np(points)
 
         if len(points) > 0:
-            diff = self.optic_flow(points[48:-1], face_region)
+            diff = self.sparse_optic_flow(points, face_region)
+            self.dense_optic_flow(face, face_region)
+            # if len(diff) > 0:
+                # Gets the maximum vertical movement
+                # max_vert = max(abs(diff[:][:, 1]))
+                # If video cuts or moves to another speaker
+                # if max_vert < 10:
+                    # pass
+
 
         try:
             return face_region, points[48:-1], diff
         except:
             return [], [], []
 
-    def optic_flow(self, points, face_region):
-        if len(self.prev_frames) > 1:
+    def sparse_optic_flow(self, points, lip_region):
+        if len(self.prev_frames) > 0:
             points = points.astype(np.float32)
             prev_frame = self.prev_frames[-1]
             prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
@@ -140,13 +135,54 @@ class ActiveSpeaker():
             key_points = np.array([points[0], points[3], points[6], points[9], points[12], points[14], points[16], points[18]]).astype(np.float32)
 
             flow, status, error = cv2.calcOpticalFlowPyrLK(
-                prev_frame, current, key_points, None, **lk_params
+                prev_frame, current, points, None, **lk_params
             )
 
             # print('Prev:', key_points)
             # print('flow:', flow)
-            diff = key_points - flow
-            # print('diff: ', diff)
+            diff = points - flow
+            # for i in range(len(diff)):
+            #     diff[i][0] /= lip_x
+            #     diff[i][1] /= lip_y
+
+            print('diff: ', diff)
+            # tools.plot_points(self.frame, key_points)
 
             return diff
         return []
+
+    def dense_optic_flow(self, face, face_region):
+        H = 64
+        if len(self.prev_frames) > 0:
+            x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
+            points = landmarks(face_region, dlib.rectangle(0,0,64,64))
+            points = face_utils.shape_to_np(points)
+            mouth_region = points[48:-1]
+            if len(points) > 0:
+                prev_frame = self.prev_frames[-1]
+                prev_face = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
+
+                ### Change this so that face and frame are stored in the same dict
+                prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
+                current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
+
+                # Gets dense optic flow values
+                flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
+                                                    winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
+
+                # Gets magnitude and anglular values for the flow values
+                mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+
+            else:
+                print('speaker change')
+
+    def get_face_coords(self, face, h, w):
+        # Gets coordinates of bounding box
+        x1, y1, x2, y2 = face[3:7] * h
+
+        # Grabs extra pixels around bounding box to account for errors and also check ranges
+        x1 = max(round(float(x1))-5, 0)
+        y1 = max(round(float(y1))-5, 0)
+        x2 = min(round(float(x2))+5, w)
+        y2 = min(round(float(y2))+5, h)
+        return x1, y1, x2, y2
