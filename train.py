@@ -14,14 +14,17 @@ ids = ['_mAfwH6i90E']
 
 def main():
     # parser = argparse.ArgumentParser(description = "Training Stage")
-    # parser.add_argument('--face_detect_threshold', type=float, default='0.5', help="Confidence score for face detection")
-    # parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
+    # parser.add_argument('face_detect_threshold', type=float, default='0.5', help="Confidence score for face detection")
+    # parser.add_argument('face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     
-    # parser.add_argument('--evaluate', type=bool, default=False, help="Perform Evaluation (True/False)")
-    # parser.add_argument('--dataset', type=str, default='AVA Active Speaker Dataset', help="Type of dataset to test and train")
+    # parser.add_argument('evaluate', type=bool, default=False, help="Perform Evaluation (True/False)")
 
-    # parser.add_argument('--train_dir', type=str, default='train', help="Data path for the training data")
-    # parser.add_argument('--test_dir', type=str, default='test', help="Data path for the testing data")
+    # parser.add_argument('train_dir', type=str, default='train', help="Data path for the training data")
+    # parser.add_argument('test_dir', type=str, default='test', help="Data path for the testing data")
+
+    # parser.add_arguement('train_flow_vector', type=str, default=None, help='Data path to csv file containing flow values and labels for training')
+    # parser.add_arguement('test_flow_vector', type=str, default=None, help='Data path to csv file containing flow values for testing')
+
 
     # args = parser.parse_args()
 
@@ -103,9 +106,8 @@ def main():
 
     # conf_matrix(counts[0], counts[1], counts[2], counts[3])
     # -------------------
-
     df = pd.DataFrame.from_dict(train_Data)
-    df.to_csv('train_vector.csv', index=True)
+    # df.to_csv('train_vector.csv', index=True)
 
 # Function to print results
 def display_results(title, counts, p, r, f):
@@ -117,6 +119,15 @@ def display_results(title, counts, p, r, f):
     print('F-Measure: ', f)
 
 def filter_faces(predicted_face, actual):
+    '''
+    Function to remove faces which have been detected but aren't in the actual labels for the frame
+    
+    params:
+        predicted_face: array containing coordinates for bounding box
+        actual: array/tensor of labels for the frame
+    
+    returns: boolean whether face is in label or not
+    '''
     if len(predicted_face) == 0:
         return False
     
@@ -128,16 +139,28 @@ def filter_faces(predicted_face, actual):
      # Evaluates if there is more than one label for the frame
     if len(a_faces.shape) > 1:
         for i in range(len(a_faces)):
-            for j in range(len(prediction)):
-                # Checks if bounding box for face detected is correct
-                # Then compares the predicted label with the actual label and returns the counts
-                return face_evaluate(predicted_face, a_faces[i])
+            check = False
+            # Checks if bounding box for face detected is correct
+            # Then compares the predicted label with the actual label and returns the counts
+            if face_evaluate(predicted_face, a_faces[i]):
+                return True
+        return False
+            
                 
     return face_evaluate(predicted_face, a_faces)
                 
-def organise_data(prediction, actual):
-    # FIlter Faces
-    # Rearrange order to match labels
+def organise_data(prediction, actual, train=True):
+    '''
+    Function to organise the flow vectors with corresponding labels
+
+    params:
+        prediction: dict containing the predicted face and label
+        actual: dict containing the actual label for the frame
+        train: boolean indicating training or testing
+    
+    returns: 
+        vector: dict containing flow values with corresponding label
+    '''
     vector = {'Flow' : [], 'Label' : []}
     
     if torch.is_tensor(actual[-1]):
@@ -149,10 +172,11 @@ def organise_data(prediction, actual):
     for i in range(len(p_faces)):
         if filter_faces(p_faces[i], actual):
             vector['Flow'].append(prediction['Flow'][i])
-            if len(actual[1].shape) > 1:
-                vector['Label'].append(label[i])
-            else:
-                vector['Label'].append(label) 
+            if train:
+                if len(actual[1].shape) > 1:
+                    vector['Label'].append(label[i])
+                else:
+                    vector['Label'].append(label)
 
     return vector
 
