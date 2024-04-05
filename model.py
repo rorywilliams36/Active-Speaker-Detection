@@ -21,9 +21,9 @@ class ActiveSpeaker():
         faces = face_detect.detect()
         img_diff = []
 
-        predicted = {'faces' : [], 'label' : []}
+        predicted = {'faces' : [], 'flow' : [], 'label' : []}
         for face in faces:
-            face_region, lip_pixels, img_diff = self.feature_detection(face)
+            face_region, lip_pixels, flow_vector = self.feature_detection(face)
 
             # Set lip pixels values
             speaking = 'NOT_SPEAKING' 
@@ -43,8 +43,9 @@ class ActiveSpeaker():
 
                 predicted['faces'].append(face[3:7])
                 predicted['label'].append(speaking)
-        
-        return predicted, self.prev_frames, img_diff
+                predicted['flow'].append(flow_vector)
+
+        return predicted, self.prev_frames
 
     def speaker_detection(self, face_region, lip_pixels, lip_box):
         score = 0
@@ -158,12 +159,12 @@ class ActiveSpeaker():
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
             points = landmarks(face_region, dlib.rectangle(0,0,64,64))
             points = face_utils.shape_to_np(points)
-            #tools.plot_frame(face_region)
+            tools.plot_frame(face_region)
             mouth_region = points[48:-1]
             if len(points) > 0:
                 prev_frame = self.prev_frames[-1]
                 prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
-                #tools.plot_frame(prev_face)
+                tools.plot_frame(prev_face)
 
                 ### Change this so that face and frame are stored in the same dict
                 prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
@@ -179,12 +180,15 @@ class ActiveSpeaker():
                 # Gets and finds the average of the vertical compoments of optic flow
                 flow_vertical = flow[..., 1]
                 flow_hori = flow[..., 0]
-                print(np.mean(flow_vertical, axis=0))
-                print(np.mean(flow_hori, axis=1))
+                hori_mean = np.mean(flow_hori, axis=1)
+                vert_mean = np.mean(flow_vertical, axis=0)
+                flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
 
+                return flow_vector
 
             else:
                 print('speaker change')
+            return []
 
     def get_face_coords(self, face, h, w):
         # Gets coordinates of bounding box
