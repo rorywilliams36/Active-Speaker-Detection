@@ -39,16 +39,16 @@ def main():
         for images, labels in trainLoaded:
             for i in range(len(images)):
                 actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
-                print()
-                print(labels['label'][i])
-                tools.plot_frame(images[i].numpy())
+                # print()
+                # print(labels['label'][i])
+                # tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
                 prediction, prev_frames = asd.model()
-                
+
                 filtered = organise_data(prediction, actual_label)
                 train_Data['Flow'].append(filtered['Flow'])
                 train_Data['Label'].append(filtered['Label'])
-                        
+    
 
 
 
@@ -63,23 +63,23 @@ def main():
 
                 # print(angles)
                 # print(prev_labels)
-                if labels['label'][i] == "Speaking":
-                    speaker_diff.append(img_diff)
-                else:
-                    non_speaker_diff.append(img_diff)
+                # if labels['label'][i] == "Speaking":
+                #     speaker_diff.append(img_diff)
+                # else:
+                #     non_speaker_diff.append(img_diff)
 
                 # tools.plot_frame(images[i].numpy())
-                print('------------')
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
-                counts[0] += tp
-                counts[1] += fp
-                counts[2] += tn
-                counts[3] += fn
 
                 vid_counts[0] += tp
                 vid_counts[1] += fp
                 vid_counts[2] += tn
                 vid_counts[3] += fn
+            
+        counts[0] += vid_counts[0]
+        counts[1] += vid_counts[1] 
+        counts[2] += vid_counts[2]
+        counts[3] += vid_counts[3]
 
         p, r, fm = metrics(vid_counts)
         non_p, non_r, non_fm = metrics([vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]])
@@ -102,6 +102,10 @@ def main():
     print('Macro F1: ', (non_fm+fm) /2)
 
     # conf_matrix(counts[0], counts[1], counts[2], counts[3])
+    # -------------------
+
+    df = pd.DataFrame.from_dict(train_Data)
+    df.to_csv('train_vector.csv', index=True)
 
 # Function to print results
 def display_results(title, counts, p, r, f):
@@ -141,11 +145,11 @@ def organise_data(prediction, actual):
     else:
         label = actual[-1]
 
-    p_faces = prediction['faces']
+    p_faces = prediction['Faces']
     for i in range(len(p_faces)):
         if filter_faces(p_faces[i], actual):
             vector['Flow'].append(prediction['Flow'][i])
-            if len(label.shape) > 1:
+            if len(actual[1].shape) > 1:
                 vector['Label'].append(label[i])
             else:
                 vector['Label'].append(label) 
