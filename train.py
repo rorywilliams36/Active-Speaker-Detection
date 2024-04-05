@@ -29,6 +29,7 @@ def main():
     a_total = 0
     speaker_diff = []
     non_speaker_diff = []
+    train_Data = {'Flow' : [], 'Label' : []}
     for video_id in ids:
         vid_counts = [0,0,0,0]
         prev_frames = []
@@ -42,7 +43,24 @@ def main():
                 print(labels['label'][i])
                 tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
-                prediction, prev_frames, img_diff = asd.model()
+                prediction, prev_frames = asd.model()
+                
+                filtered = organise_data(prediction, actual_label)
+                train_Data['Flow'].append(filtered['Flow'])
+                train_Data['Label'].append(filtered['Label'])
+                        
+
+
+
+
+
+
+
+
+
+
+                # ------------------------
+
                 # print(angles)
                 # print(prev_labels)
                 if labels['label'][i] == "Speaking":
@@ -94,7 +112,45 @@ def display_results(title, counts, p, r, f):
     print('Recall: ', r)
     print('F-Measure: ', f)
 
+def filter_faces(predicted_face, actual):
+    if len(predicted_face) == 0:
+        return False
+    
+    if torch.is_tensor(actual[1]):
+        a_faces = actual[1].numpy()
+    else:
+        a_faces = actual[1]
 
+     # Evaluates if there is more than one label for the frame
+    if len(a_faces.shape) > 1:
+        for i in range(len(a_faces)):
+            for j in range(len(prediction)):
+                # Checks if bounding box for face detected is correct
+                # Then compares the predicted label with the actual label and returns the counts
+                return face_evaluate(predicted_face, a_faces[i])
+                
+    return face_evaluate(predicted_face, a_faces)
+                
+def organise_data(prediction, actual):
+    # FIlter Faces
+    # Rearrange order to match labels
+    vector = {'Flow' : [], 'Label' : []}
+    
+    if torch.is_tensor(actual[-1]):
+        label = actual[-1].numpy()
+    else:
+        label = actual[-1]
+
+    p_faces = prediction['faces']
+    for i in range(len(p_faces)):
+        if filter_faces(p_faces[i], actual):
+            vector['Flow'].append(prediction['Flow'][i])
+            if len(label.shape) > 1:
+                vector['Label'].append(label[i])
+            else:
+                vector['Label'].append(label) 
+
+    return vector
 
 if __name__ == "__main__":
     main()
