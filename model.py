@@ -106,7 +106,7 @@ class ActiveSpeaker():
 
         if len(points) > 0:
             diff = self.sparse_optic_flow(points)
-            self.dense_optic_flow(face, face_region)
+            flow_vector = self.dense_optic_flow(face, face_region)
             # if len(diff) > 0:
                 # Gets the maximum vertical movement
                 # max_vert = max(abs(diff[:][:, 1]))
@@ -116,7 +116,7 @@ class ActiveSpeaker():
 
 
         try:
-            return face_region, points[48:-1], diff
+            return face_region, points[48:-1], flow_vector
         except:
             return [], [], []
 
@@ -185,9 +185,7 @@ class ActiveSpeaker():
                 flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
 
                 return flow_vector
-
-            else:
-                print('speaker change')
+                
             return []
 
     def get_face_coords(self, face, h, w):
