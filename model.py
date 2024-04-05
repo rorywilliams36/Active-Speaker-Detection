@@ -21,7 +21,7 @@ class ActiveSpeaker():
         faces = face_detect.detect()
         img_diff = []
 
-        predicted = {'faces' : [], 'flow' : [], 'label' : []}
+        predicted = {'Faces' : [], 'Flow' : [], 'Label' : []}
         for face in faces:
             face_region, lip_pixels, flow_vector = self.feature_detection(face)
 
@@ -41,9 +41,9 @@ class ActiveSpeaker():
                 
                 prev_frames = self.update_stacks(self.prev_frames, self.frame, pointer=3)
 
-                predicted['faces'].append(face[3:7])
-                predicted['label'].append(speaking)
-                predicted['flow'].append(flow_vector)
+                predicted['Faces'].append(face[3:7])
+                predicted['Label'].append(speaking)
+                predicted['Flow'].append(flow_vector)
 
         return predicted, self.prev_frames
 
@@ -159,12 +159,12 @@ class ActiveSpeaker():
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
             points = landmarks(face_region, dlib.rectangle(0,0,64,64))
             points = face_utils.shape_to_np(points)
-            tools.plot_frame(face_region)
+            # tools.plot_frame(face_region)
             mouth_region = points[48:-1]
             if len(points) > 0:
                 prev_frame = self.prev_frames[-1]
                 prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
-                tools.plot_frame(prev_face)
+                # tools.plot_frame(prev_face)
 
                 ### Change this so that face and frame are stored in the same dict
                 prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)

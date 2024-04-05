@@ -71,8 +71,8 @@ def evaluate(prediction, actual):
         a_faces = actual[1]
 
     a_label = actual[-1]
-    p_faces = prediction['faces']
-    p_labels = prediction['label']
+    p_faces = prediction['Faces']
+    p_labels = prediction['Label']
 
     # If no label is returned for the frame 
     if len(p_labels) == 0 or len(p_faces) == 0:
