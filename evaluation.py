@@ -112,12 +112,12 @@ def face_evaluate(prediction, actual):
 def label_eval(prediction, actual, counts):
     tp, fp, tn, fn = counts
     if prediction == actual:
-        if prediction == 'SPEAKING':
+        if prediction == 1:
             tp += 1
         else:
             tn += 1
     else:
-        if prediction == 'SPEAKING' and actual != 'SPEAKING':
+        if prediction == 1 and actual != 1:
             fp += 1
         else:
             fn += 1
