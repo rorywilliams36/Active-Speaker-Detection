@@ -17,6 +17,8 @@ def main():
     # parser.add_argument('face_detect_threshold', type=float, default='0.5', help="Confidence score for face detection")
     # parser.add_argument('face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     
+    # parser.add_argument('test', type=bool, default=False, help="Perform testing (True/False)")
+
     # parser.add_argument('evaluate', type=bool, default=False, help="Perform Evaluation (True/False)")
 
     # parser.add_argument('train_dir', type=str, default='train', help="Data path for the training data")
@@ -25,7 +27,6 @@ def main():
     # parser.add_arguement('train_flow_vector', type=str, default=None, help='Data path to csv file containing flow values and labels for training')
     # parser.add_arguement('test_flow_vector', type=str, default=None, help='Data path to csv file containing flow values for testing')
 
-
     # args = parser.parse_args()
 
     counts = [0,0,0,0] # tp, fp, tn, fn
@@ -33,6 +34,7 @@ def main():
     speaker_diff = []
     non_speaker_diff = []
     train_Data = {'Flow' : [], 'Label' : []}
+
     for video_id in ids:
         vid_counts = [0,0,0,0]
         prev_frames = []
@@ -52,26 +54,7 @@ def main():
                 train_Data['Flow'].append(filtered['Flow'])
                 train_Data['Label'].append(filtered['Label'])
     
-
-
-
-
-
-
-
-
-
-
                 # ------------------------
-
-                # print(angles)
-                # print(prev_labels)
-                # if labels['label'][i] == "Speaking":
-                #     speaker_diff.append(img_diff)
-                # else:
-                #     non_speaker_diff.append(img_diff)
-
-                # tools.plot_frame(images[i].numpy())
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
 
                 vid_counts[0] += tp
@@ -84,28 +67,15 @@ def main():
         counts[2] += vid_counts[2]
         counts[3] += vid_counts[3]
 
-        p, r, fm = metrics(vid_counts)
-        non_p, non_r, non_fm = metrics([vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]])
-
-        display_results('SPEAKING', vid_counts, p, r, fm)
-        display_results('NON-SPEAKING', [vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]], non_p, non_r, non_fm)
-
         a_total += trainLoader.__len__()
 
-    p, r, fm = metrics(counts)
-    non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
+    display_evaluate(counts, a_total)
 
-
-    display_results('GENERAL-SPEAKING', counts, p, r, fm)
-    display_results('GENERAL-NON-SPEAKING', [counts[2], counts[3], counts[0], counts[1]],  non_p, non_r, non_fm)
-
-    print('Total: ', np.sum(counts))
-    print('Number of Frames ', a_total)
-    print('\nAverage Precision: ', (p + non_p) /2)
-    print('Macro F1: ', (non_fm+fm) /2)
 
     # conf_matrix(counts[0], counts[1], counts[2], counts[3])
+
     # -------------------
+
     df = pd.DataFrame.from_dict(train_Data)
     # df.to_csv('train_vector.csv', index=True)
 
@@ -117,6 +87,20 @@ def display_results(title, counts, p, r, f):
     print('Precision: ', p)
     print('Recall: ', r)
     print('F-Measure: ', f)
+
+# Function to present results
+def display_evaluate(counts, total):
+    p, r, fm = metrics(counts)
+    non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
+
+    display_results('SPEAKING', vid_counts, p, r, fm)
+    display_results('NON-SPEAKING', [vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]], non_p, non_r, non_fm)
+
+    print('Total: ', np.sum(counts))
+    print('Number of Frames ', total)
+    print('\nAverage Precision: ', (p + non_p) /2)
+    print('Macro F1: ', (non_fm+fm) /2)
+
 
 def filter_faces(predicted_face, actual):
     '''
