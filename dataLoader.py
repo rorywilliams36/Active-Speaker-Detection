@@ -72,6 +72,8 @@ class Train_Loader(Dataset):
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
         labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
+        labels_df = labels_df.replace('NOT_SPEAKING', 0)
+        labels_df = labels_df.replace('SPEAKING', 1)
 
         return labels_df
 
