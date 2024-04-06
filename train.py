@@ -1,12 +1,12 @@
-import os, argparse, cv2, glob, timeit
+import os, argparse, cv2
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
-from sklearn import svm
 
 from dataLoader import Train_Loader, Val_Loader
 from asd import ActiveSpeaker
+from model import SVM
 from evaluation import *
 from utils import tools
 
@@ -80,21 +80,13 @@ def main():
     # -------------------
 
     train_Data['Label'] = np.array(train_Data['Label']).flatten()
-    df = pd.DataFrame.from_dict(train_Data)
-    # df.replace(to_replace='SPEAKING', value='1')
-    # df.replace(to_replace='NOT_SPEAKING', value='0')
 
     X_train = np.array(train_Data['Flow'])
     print(X_train)
     Y_train = train_Data['Label']
+    classify = SVM(False)
+    model = classify.train(X_train, Y_train)
 
-    print(np.array(X_train).shape)
-    print(np.array(Y_train).shape)
-    print('TRAINING')
-    clf = svm.NuSVC(gamma="auto")  
-    clf.fit(X_train, Y_train)
-
-    # df.to_csv('train_vector.csv', index=True)
 
 # Function to print results
 def display_results(title, counts, p, r, f):
