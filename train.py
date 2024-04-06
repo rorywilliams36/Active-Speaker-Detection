@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn import svm
 
 from dataLoader import Train_Loader, Val_Loader
-from model import ActiveSpeaker
+from asd import ActiveSpeaker
 from evaluation import *
 from utils import tools
 
@@ -78,8 +78,6 @@ def main():
     # conf_matrix(counts[0], counts[1], counts[2], counts[3])
 
     # -------------------
-
-    xx, yy = np.meshgrid(np.linspace(-3, 3, 500), np.linspace(-3, 3, 500))
 
     train_Data['Label'] = np.array(train_Data['Label']).flatten()
     df = pd.DataFrame.from_dict(train_Data)
