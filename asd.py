@@ -140,14 +140,8 @@ class ActiveSpeaker():
                 prev_frame, current, points, None, **lk_params
             )
 
-            # print('Prev:', key_points)
-            # print('flow:', flow)
             diff = points - flow
-            # for i in range(len(diff)):
-            #     diff[i][0] /= lip_x
-            #     diff[i][1] /= lip_y
-
-            # print('diff: ', diff)
+            
             # tools.plot_points(self.frame, key_points)
 
             return diff
@@ -159,12 +153,10 @@ class ActiveSpeaker():
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
             points = landmarks(face_region, dlib.rectangle(0,0,64,64))
             points = face_utils.shape_to_np(points)
-            # tools.plot_frame(face_region)
             mouth_region = points[48:-1]
             if len(points) > 0:
                 prev_frame = self.prev_frames[-1]
                 prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
-                # tools.plot_frame(prev_face)
 
                 ### Change this so that face and frame are stored in the same dict
                 prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
@@ -185,7 +177,6 @@ class ActiveSpeaker():
                 flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
 
                 return flow_vector
-                
             return []
 
     def get_face_coords(self, face, h, w):
