@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
+from sklearn import svm
 
 from dataLoader import Train_Loader, Val_Loader
 from model import ActiveSpeaker
@@ -51,9 +52,11 @@ def main():
                 prediction, prev_frames = asd.model()
 
                 filtered = organise_data(prediction, actual_label)
-                train_Data['Flow'].append(filtered['Flow'])
-                train_Data['Label'].append(filtered['Label'])
-    
+                if len(filtered['Flow']) > 0 or len(filtered['Label']) > 0:
+                    for i in range(len(filtered['Flow'])):
+                        train_Data['Flow'].append(filtered['Flow'][i])
+                        train_Data['Label'].append(filtered['Label'][i])
+
                 # ------------------------
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
 
@@ -69,14 +72,30 @@ def main():
 
         a_total += trainLoader.__len__()
 
-    display_evaluate(counts, a_total)
+    # display_evaluate(counts, a_total)
 
 
     # conf_matrix(counts[0], counts[1], counts[2], counts[3])
 
     # -------------------
 
+    xx, yy = np.meshgrid(np.linspace(-3, 3, 500), np.linspace(-3, 3, 500))
+
+    train_Data['Label'] = np.array(train_Data['Label']).flatten()
     df = pd.DataFrame.from_dict(train_Data)
+    # df.replace(to_replace='SPEAKING', value='1')
+    # df.replace(to_replace='NOT_SPEAKING', value='0')
+
+    X_train = np.array(train_Data['Flow'])
+    print(X_train)
+    Y_train = train_Data['Label']
+
+    print(np.array(X_train).shape)
+    print(np.array(Y_train).shape)
+    print('TRAINING')
+    clf = svm.NuSVC(gamma="auto")  
+    clf.fit(X_train, Y_train)
+
     # df.to_csv('train_vector.csv', index=True)
 
 # Function to print results
@@ -93,8 +112,8 @@ def display_evaluate(counts, total):
     p, r, fm = metrics(counts)
     non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
 
-    display_results('SPEAKING', vid_counts, p, r, fm)
-    display_results('NON-SPEAKING', [vid_counts[2], vid_counts[3], vid_counts[0], vid_counts[1]], non_p, non_r, non_fm)
+    display_results('SPEAKING', counts, p, r, fm)
+    display_results('NON-SPEAKING', [counts[2], counts[3], counts[0], counts[1]], non_p, non_r, non_fm)
 
     print('Total: ', np.sum(counts))
     print('Number of Frames ', total)
@@ -146,7 +165,8 @@ def organise_data(prediction, actual, train=True):
         vector: dict containing flow values with corresponding label
     '''
     vector = {'Flow' : [], 'Label' : []}
-    
+    flow = []
+    labels = []
     if torch.is_tensor(actual[-1]):
         label = actual[-1].numpy()
     else:
@@ -155,14 +175,16 @@ def organise_data(prediction, actual, train=True):
     p_faces = prediction['Faces']
     for i in range(len(p_faces)):
         if filter_faces(p_faces[i], actual):
-            vector['Flow'].append(prediction['Flow'][i])
-            if train:
-                if len(actual[1].shape) > 1:
-                    vector['Label'].append(label[i])
-                else:
-                    vector['Label'].append(label)
 
-    return vector
+            if prediction['Flow'][i] is not None:
+                flow.append(prediction['Flow'][i])
+                if train:
+                    if len(actual[1].shape) > 1:
+                        labels.append(label[i])
+                    else:
+                        labels.append(label)
+
+    return {'Flow' : flow, 'Label' : labels}
 
 if __name__ == "__main__":
     main()
