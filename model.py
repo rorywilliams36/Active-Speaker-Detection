@@ -1,22 +1,32 @@
 import pandas as pd
 import numpy as np
 from sklearn import svm
-from sklearn.externals import joblib
+import joblib
 
 
 class SVM():
+    def __init__(self, load):
+        if load:
+            self.model = self.load_parameters
+        else:
+            self.model = svm.NuSVC(gamma="scale", probability=True, class_weight={0 : 0.6})
 
     # Trains model
     def train(self, X, Y):
-        if X.shape[-1] == Y.shape[0]:
-            clf = svm.NuSVC(gamma="auto")  
-            clf.fit(X_train, Y_train)
-            return clf
+        print(X.shape)
+        print(Y.shape)
+        if X.shape[0] == Y.shape[0]:
+            print('Training Starting...')
+            self.model.fit(X, Y)
+            print('Training Completed')
+            return self.model
+
+        print('Error during training. Data constructed incorrectly')
         return None
 
     # Tests model
     def test(self, clf, X):
-        Y = clf.predict(X)
+        Y = self.model.predict(X)
         return Y
 
     def loss(self):
