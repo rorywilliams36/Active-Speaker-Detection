@@ -12,7 +12,7 @@ path = os.getcwd()
 path = os.path.join(path, 'faceDetection/model')
 
 class FaceDetection():
-    def __init__(self, frame, threshold: float = 0.25, model: str = 'res10_300x300_ssd_iter_140000.caffemodel'):
+    def __init__(self, frame, threshold: float = 0.5, model: str = 'res10_300x300_ssd_iter_140000.caffemodel'):
         self.frame = frame
         self.face_detector = cv2.dnn.readNetFromCaffe(f"{path}/deploy.prototxt.txt", f"{path}/{model}")
         self.threshold = threshold
