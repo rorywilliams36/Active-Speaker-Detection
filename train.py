@@ -13,22 +13,21 @@ from utils import tools
 ids = ['_mAfwH6i90E']
 
 def main():
-    parser = argparse.ArgumentParser(description = "Training Stage")
+    parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
     parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
-    
     parser.add_argument('--train', type=bool, required=True, default=False, help="Perform training (True/False)")
     parser.add_argument('--test', type=bool, required=True, default=False, help="Perform testing (True/False)")
     parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
-
     parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training data")
     parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing data")
-
     parser.add_argument('--trainFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
     parser.add_argument('--testFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
+    parser.add_argument('--saveTrainVector', type=bool, default=False, required=False, help='Save the training vector to a csv file')
+    parser.add_argument('--saveResults', type=bool, default=False, required=False, help='Save results from testing')
+    parser.add_argument('--loadModel', type=str, default=None, required=False, help='Data path to presaved model used for classification')
 
     args = parser.parse_args()
-    print(args)
 
     counts = [0,0,0,0] # tp, fp, tn, fn
     a_total = 0
