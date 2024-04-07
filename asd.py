@@ -70,7 +70,6 @@ class ActiveSpeaker():
         if len(points) > 0:
             flow_vector = self.dense_optic_flow(face, face_region, points)
 
-
         try:
             return face_region, points[48:-1], flow_vector
         except:
@@ -176,30 +175,3 @@ class ActiveSpeaker():
         if opposite <= hypotenuse and opposite > 0:
             return np.arcsin(opposite / hypotenuse)
         return 0
-
-
-        
-    def sparse_optic_flow(self, points):
-        if len(self.prev_frames['Frame']) > 0:
-            points = points.astype(np.float32)
-            prev_frame = self.prev_frames['Frame']
-            prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
-            current = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-
-            # Parameters for Lucas Kanade optical flow
-            lk_params = dict(
-                winSize=(15,15),
-                maxLevel=2,
-                criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
-            )
-    
-            key_points = np.array([points[0], points[3], points[6], points[9], points[12], points[14], points[16], points[18]]).astype(np.float32)
-
-            flow, status, error = cv2.calcOpticalFlowPyrLK(
-                prev_frame, current, points, None, **lk_params
-            )
-
-            diff = points - flow
-        
-            return diff
-        return []

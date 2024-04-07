@@ -13,21 +13,22 @@ from utils import tools
 ids = ['_mAfwH6i90E']
 
 def main():
-    # parser = argparse.ArgumentParser(description = "Training Stage")
-    # parser.add_argument('face_detect_threshold', type=float, default='0.5', help="Confidence score for face detection")
-    # parser.add_argument('face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
+    parser = argparse.ArgumentParser(description = "Training Stage")
+    parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
+    parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     
-    # parser.add_argument('test', type=bool, default=False, help="Perform testing (True/False)")
+    parser.add_argument('--train', type=bool, required=True, default=False, help="Perform training (True/False)")
+    parser.add_argument('--test', type=bool, required=True, default=False, help="Perform testing (True/False)")
+    parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
 
-    # parser.add_argument('evaluate', type=bool, default=False, help="Perform Evaluation (True/False)")
+    parser.add_argument('--train_dir', type=str, default='train', required=False, help="Data path for the training data")
+    parser.add_argument('--test_dir', type=str, default='test', required=False, help="Data path for the testing data")
 
-    # parser.add_argument('train_dir', type=str, default='train', help="Data path for the training data")
-    # parser.add_argument('test_dir', type=str, default='test', help="Data path for the testing data")
+    parser.add_argument('--train_flow_vector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
+    parser.add_argument('--test_flow_vector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
 
-    # parser.add_arguement('train_flow_vector', type=str, default=None, help='Data path to csv file containing flow values and labels for training')
-    # parser.add_arguement('test_flow_vector', type=str, default=None, help='Data path to csv file containing flow values for testing')
-
-    # args = parser.parse_args()
+    args = parser.parse_args()
+    print(args)
 
     counts = [0,0,0,0] # tp, fp, tn, fn
     a_total = 0
@@ -49,14 +50,16 @@ def main():
                 # tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
                 prediction = asd.model()
+
                 prev_frames['Frame'] = images[i].numpy()
                 prev_frames['Faces'] = prediction['Faces']
-
                 filtered = organise_data(prediction, actual_label)
+
                 if len(filtered['Flow']) > 0 or len(filtered['Label']) > 0:
                     for i in range(len(filtered['Flow'])):
                         train_Data['Flow'].append(filtered['Flow'][i])
                         train_Data['Label'].append(filtered['Label'][i])
+
 
                 # ------------------------
                 tp, fp, tn, fn = evaluate(prediction, actual_label)
@@ -83,11 +86,11 @@ def main():
     train_Data['Label'] = np.array(train_Data['Label']).flatten()
 
     X_train = np.array(train_Data['Flow'])
-    print(X_train)
+    # print(X_train)
     Y_train = train_Data['Label']
     classify = SVM(False)
     model = classify.train(X_train, Y_train)
-
+    test = True
 
 # Function to print results
 def display_results(title, counts, p, r, f):
