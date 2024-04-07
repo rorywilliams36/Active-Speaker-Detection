@@ -72,6 +72,8 @@ class Train_Loader(Dataset):
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
         labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
+        labels_df = labels_df.replace('NOT_SPEAKING', 0)
+        labels_df = labels_df.replace('SPEAKING', 1)
 
         return labels_df
 
@@ -134,7 +136,7 @@ class Val_Loader(Dataset):
         # Return frames and labels as tensors
         return torch.from_numpy(frame), label
 
-# Transforms the image by resizing and turning to grayscale
+# Transforms frame by applying gaussian blur, histogram eq and resizing
 def transform_frame(frame):
     H = 300
     frame = cv2.GaussianBlur(frame, (5,5), 2.5)
@@ -155,7 +157,7 @@ def create_labels_dict(labels):
     
     return label_dict
 
-# Converts each label for the timestamp to tensor
+# Converts each label for the timestampS to tensor
 # Since labels contain the coordinates of the face speaking and the actual label
 # all values need to be of the same type
 def convert_label_to_tensor(label):
