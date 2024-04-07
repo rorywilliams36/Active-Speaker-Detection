@@ -21,7 +21,7 @@ def split_into_frames(video_id):
     start = labels.at[0, 'Timestamp'] - 0.04
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    if fps == 30:
+    if round(fps) == 30:
         skip = 3
     else: 
         skip = 2.5
@@ -40,7 +40,7 @@ def split_into_frames(video_id):
         # Converts milliseconds to seconds ot match the timestamps in the labels
             norm_time = round((timestamp / 1000), 2) 
             # Only gets frames with a corresponding label
-            if norm_time >= 1200 and count <= 250:
+            if norm_time >= 900 and count <= 500:
                 for i in range(len(labels)):
                     label_timestamp = labels.at[i, "Timestamp"]
                     if frame_count % skip == 0:                    
@@ -98,7 +98,7 @@ def get_frame_rate(video_id):
 
 if __name__ == "__main__":
     # ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M'] #, '8VZEwOCQ8bc']
-    split_into_frames('B1MAUxpKaV8')
+    split_into_frames('-5KQ66BBWC4')
     # for i in ids:
     #     print(i, get_frame_rate(i))
     # download_files(f'{URL}/{train_files[0]}', 'B1MAUxpKaV8')
