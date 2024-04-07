@@ -148,10 +148,20 @@ class ActiveSpeaker():
 
     def dense_optic_flow(self, face, face_region, points):
         H = 64
+        prev_face = None
         if len(self.prev_frames['Frame']) > 0:
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
             if len(points) > 0:
                 prev_frame = self.prev_frames['Frame']
+                prev_faces = self.prev_frames['Faces']
+
+                if len(prev_faces) > 0:
+                    for face in prev_faces:
+                        p_face = self.get_face_coords(face, 300, 300)
+                        if self.check_face([x1,y1,x2,y2], p_face):
+                            x1,y1,x2,y2 = p_face
+                            break
+
                 prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
 
                 ### Change this so that face and frame are stored in the same dict
@@ -177,7 +187,10 @@ class ActiveSpeaker():
 
     def get_face_coords(self, face, h, w):
         # Gets coordinates of bounding box
-        x1, y1, x2, y2 = face[3:7] * h
+        if len(face) > 4:
+            x1, y1, x2, y2 = face[3:7] * h
+        else:
+            x1, y1, x2, y2 = face * h
 
         # Grabs extra pixels around bounding box to account for errors and also check ranges
         x1 = max(round(float(x1))-5, 0)
@@ -185,3 +198,9 @@ class ActiveSpeaker():
         x2 = min(round(float(x2))+5, w)
         y2 = min(round(float(y2))+5, h)
         return x1, y1, x2, y2
+
+    def check_face(self, current, previous):
+        x1,y1,x2,y2 = current
+        p_x1, p_y1, p_x2, p_y2 = previous
+        return (x1 <= p_x2) or (x2 >= p_x1) or (y1 <= p_y2) or (y2 >= p_y1)
+
