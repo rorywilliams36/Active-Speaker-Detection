@@ -66,7 +66,7 @@ class ActiveSpeaker():
 
         points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
         points = face_utils.shape_to_np(points)
-        
+
         if len(points) > 0:
             flow_vector = self.dense_optic_flow(face, face_region, points)
 
@@ -83,8 +83,9 @@ class ActiveSpeaker():
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
             if len(points) > 0:
                 prev_frame = self.prev_frames['Frame']
-                prev_faces = self.prev_frames['Faces']
+                prev_faces = self.prev_frames['Faces' ]
 
+                # Checks if the faces used are in the previous frames
                 if len(prev_faces) > 0:
                     for face in prev_faces:
                         p_face = self.get_face_coords(face, 300, 300)
@@ -92,9 +93,9 @@ class ActiveSpeaker():
                             x1,y1,x2,y2 = p_face
                             break
 
+                # If no face is detected use the same coordinates from before
                 prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
 
-                ### Change this so that face and frame are stored in the same dict
                 prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
                 current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
@@ -139,9 +140,7 @@ class ActiveSpeaker():
 
 
 
-
-
-
+    # Unused code/ about to be removed
     def speaker_detection(self, face_region, lip_pixels, lip_box):
         score = 0
         centre_lip = ((lip_box[0] + lip_box[2])/2, (lip_box[1] + lip_box[-1])/2)
