@@ -1,8 +1,8 @@
+import joblib
 import pandas as pd
 import numpy as np
 from sklearn import svm
-import joblib
-
+from sklearn.metrics import log_loss
 
 class SVM():
     def __init__(self, load):
@@ -13,8 +13,6 @@ class SVM():
 
     # Trains model
     def train(self, X, Y):
-        print(X.shape)
-        print(Y.shape)
         if X.shape[0] == Y.shape[0]:
             print('Training Starting...')
             self.model.fit(X, Y)
