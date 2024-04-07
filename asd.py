@@ -10,7 +10,8 @@ from utils import tools
 landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
-    def __init__(self, frame, face_thresh: float = 0.5, angle_thresh: tuple = (0.78, 0.74), prev_frames: list = []):
+    def __init__(self, frame, face_thresh: float = 0.5, angle_thresh: tuple = (0.78, 0.74),
+                prev_frames: dict = {'Frame' : [], 'Faces' : []}):
         self.frame = frame.numpy()
         self.prev_frames = prev_frames
         self.face_thresh = face_thresh
@@ -39,13 +40,11 @@ class ActiveSpeaker():
 
                 speaking = self.speaker_detection(face_region, lip_pixels, lip_box)
                 
-                prev_frames = self.update_stacks(self.prev_frames, self.frame, pointer=3)
-
                 predicted['Faces'].append(face[3:7])
                 predicted['Label'].append(speaking)
                 predicted['Flow'].append(flow_vector)
 
-        return predicted, self.prev_frames
+        return predicted
 
     def speaker_detection(self, face_region, lip_pixels, lip_box):
         score = 0
@@ -106,7 +105,7 @@ class ActiveSpeaker():
 
         if len(points) > 0:
             diff = self.sparse_optic_flow(points)
-            flow_vector = self.dense_optic_flow(face, face_region)
+            flow_vector = self.dense_optic_flow(face, face_region, points)
             # if len(diff) > 0:
                 # Gets the maximum vertical movement
                 # max_vert = max(abs(diff[:][:, 1]))
@@ -121,9 +120,9 @@ class ActiveSpeaker():
             return [], [], []
 
     def sparse_optic_flow(self, points):
-        if len(self.prev_frames) > 0:
+        if len(self.prev_frames['Frame']) > 0:
             points = points.astype(np.float32)
-            prev_frame = self.prev_frames[-1]
+            prev_frame = self.prev_frames['Frame']
             prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
             current = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
@@ -147,15 +146,12 @@ class ActiveSpeaker():
             return diff
         return []
 
-    def dense_optic_flow(self, face, face_region):
+    def dense_optic_flow(self, face, face_region, points):
         H = 64
-        if len(self.prev_frames) > 0:
+        if len(self.prev_frames['Frame']) > 0:
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
-            points = landmarks(face_region, dlib.rectangle(0,0,64,64))
-            points = face_utils.shape_to_np(points)
-            mouth_region = points[48:-1]
             if len(points) > 0:
-                prev_frame = self.prev_frames[-1]
+                prev_frame = self.prev_frames['Frame']
                 prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
 
                 ### Change this so that face and frame are stored in the same dict

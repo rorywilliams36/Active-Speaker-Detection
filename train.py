@@ -1,7 +1,6 @@
 import os, argparse, cv2
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 
 from dataLoader import Train_Loader, Val_Loader
@@ -38,7 +37,7 @@ def main():
 
     for video_id in ids:
         vid_counts = [0,0,0,0]
-        prev_frames = []
+        prev_frames = {'Frame' : [], 'Faces' : []}
         trainLoader = Train_Loader(video_id=video_id, root_dir=video_id)
         trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=False)
 
@@ -49,7 +48,9 @@ def main():
                 # print(labels['label'][i])
                 # tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
-                prediction, prev_frames = asd.model()
+                prediction = asd.model()
+                prev_frames['Frame'] = images[i].numpy()
+                prev_frames['Faces'] = prediction['Faces']
 
                 filtered = organise_data(prediction, actual_label)
                 if len(filtered['Flow']) > 0 or len(filtered['Label']) > 0:
