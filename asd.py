@@ -46,42 +46,6 @@ class ActiveSpeaker():
 
         return predicted
 
-    def speaker_detection(self, face_region, lip_pixels, lip_box):
-        score = 0
-        centre_lip = ((lip_box[0] + lip_box[2])/2, (lip_box[1] + lip_box[-1])/2)
-
-        centre_upper = lip_pixels[3]
-        centre_lower = lip_pixels[9]
-        left = lip_pixels[0]
-        right = lip_pixels[6]
-
-        left_angle = self.mouth_angle(centre_lower, left, centre_lip) + self.mouth_angle(centre_upper, left, centre_lip)
-        right_angle = self.mouth_angle(centre_lower, right, centre_lip) + self.mouth_angle(centre_upper, right, centre_lip)
-
-        # print(left_angle, right_angle)
-        if left_angle > self.angle_thresh[0] or right_angle > self.angle_thresh[1]:
-            return 'SPEAKING'
-        return 'NOT_SPEAKING'
-
-    def mouth_angle(self, point1, point2, centre_point):
-        '''
-        Args: 
-            Point1: first point (generally centre of upper/lower lip)
-            Point2: Second coordinate (generally either far left/right point)
-            Centre_point: Centre pixel of the lip
-
-        Returns: Angle of mouth opening from the given points (rads)
-        '''
-
-        # Find the opposite and hypotenuse
-        opposite = np.linalg.norm(point1 - centre_point)
-        hypotenuse = np.linalg.norm(point2 - centre_point)
-
-        # Get angle
-        if opposite <= hypotenuse and opposite > 0:
-            return np.arcsin(opposite / hypotenuse)
-        return 0
-
     # Contains the values/items from the last 10 frames
     # Updates stack by adding new items and removing if greater than 10
     def update_stacks(self, stack, item, pointer):
@@ -102,49 +66,15 @@ class ActiveSpeaker():
 
         points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
         points = face_utils.shape_to_np(points)
-
+        
         if len(points) > 0:
-            diff = self.sparse_optic_flow(points)
             flow_vector = self.dense_optic_flow(face, face_region, points)
-            # if len(diff) > 0:
-                # Gets the maximum vertical movement
-                # max_vert = max(abs(diff[:][:, 1]))
-                # If video cuts or moves to another speaker
-                # if max_vert < 10:
-                    # pass
 
 
         try:
             return face_region, points[48:-1], flow_vector
         except:
             return [], [], []
-
-    def sparse_optic_flow(self, points):
-        if len(self.prev_frames['Frame']) > 0:
-            points = points.astype(np.float32)
-            prev_frame = self.prev_frames['Frame']
-            prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
-            current = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-
-            # Parameters for Lucas Kanade optical flow
-            lk_params = dict(
-                winSize=(15,15),
-                maxLevel=2,
-                criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
-            )
-    
-            key_points = np.array([points[0], points[3], points[6], points[9], points[12], points[14], points[16], points[18]]).astype(np.float32)
-
-            flow, status, error = cv2.calcOpticalFlowPyrLK(
-                prev_frame, current, points, None, **lk_params
-            )
-
-            diff = points - flow
-            
-            # tools.plot_points(self.frame, key_points)
-
-            return diff
-        return []
 
     def dense_optic_flow(self, face, face_region, points):
         H = 64
@@ -204,3 +134,73 @@ class ActiveSpeaker():
         p_x1, p_y1, p_x2, p_y2 = previous
         return (x1 <= p_x2) or (x2 >= p_x1) or (y1 <= p_y2) or (y2 >= p_y1)
 
+
+
+
+
+
+
+
+
+    def speaker_detection(self, face_region, lip_pixels, lip_box):
+        score = 0
+        centre_lip = ((lip_box[0] + lip_box[2])/2, (lip_box[1] + lip_box[-1])/2)
+
+        centre_upper = lip_pixels[3]
+        centre_lower = lip_pixels[9]
+        left = lip_pixels[0]
+        right = lip_pixels[6]
+
+        left_angle = self.mouth_angle(centre_lower, left, centre_lip) + self.mouth_angle(centre_upper, left, centre_lip)
+        right_angle = self.mouth_angle(centre_lower, right, centre_lip) + self.mouth_angle(centre_upper, right, centre_lip)
+
+        # print(left_angle, right_angle)
+        if left_angle > self.angle_thresh[0] or right_angle > self.angle_thresh[1]:
+            return 'SPEAKING'
+        return 'NOT_SPEAKING'
+
+    def mouth_angle(self, point1, point2, centre_point):
+        '''
+        Args: 
+            Point1: first point (generally centre of upper/lower lip)
+            Point2: Second coordinate (generally either far left/right point)
+            Centre_point: Centre pixel of the lip
+
+        Returns: Angle of mouth opening from the given points (rads)
+        '''
+
+        # Find the opposite and hypotenuse
+        opposite = np.linalg.norm(point1 - centre_point)
+        hypotenuse = np.linalg.norm(point2 - centre_point)
+
+        # Get angle
+        if opposite <= hypotenuse and opposite > 0:
+            return np.arcsin(opposite / hypotenuse)
+        return 0
+
+
+        
+    def sparse_optic_flow(self, points):
+        if len(self.prev_frames['Frame']) > 0:
+            points = points.astype(np.float32)
+            prev_frame = self.prev_frames['Frame']
+            prev_frame = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+            current = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+
+            # Parameters for Lucas Kanade optical flow
+            lk_params = dict(
+                winSize=(15,15),
+                maxLevel=2,
+                criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
+            )
+    
+            key_points = np.array([points[0], points[3], points[6], points[9], points[12], points[14], points[16], points[18]]).astype(np.float32)
+
+            flow, status, error = cv2.calcOpticalFlowPyrLK(
+                prev_frame, current, points, None, **lk_params
+            )
+
+            diff = points - flow
+        
+            return diff
+        return []
