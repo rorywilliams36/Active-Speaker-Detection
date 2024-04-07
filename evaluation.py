@@ -102,11 +102,7 @@ def evaluate(prediction, actual):
 def face_evaluate(prediction, actual):
     x1, y1, x2, y2 = prediction * 300
     a_x1, a_y1, a_x2, a_y2 = actual * 300
-    c_x = (a_x1 + a_x2) / 2
-    c_y = (a_y1 + a_y2) / 2
-    if (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2):
-        return True
-    return False
+    return (x1 <= a_x2) or (x2 >= a_x1) or (y1 <= a_y2) or (y2 >= a_y1)
 
 # Function to compare the predicted label with the actual and update the metrics
 def label_eval(prediction, actual, counts):
