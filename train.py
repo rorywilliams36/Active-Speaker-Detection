@@ -21,11 +21,11 @@ def main():
     parser.add_argument('--test', type=bool, required=True, default=False, help="Perform testing (True/False)")
     parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
 
-    parser.add_argument('--train_dir', type=str, default='train', required=False, help="Data path for the training data")
-    parser.add_argument('--test_dir', type=str, default='test', required=False, help="Data path for the testing data")
+    parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training data")
+    parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing data")
 
-    parser.add_argument('--train_flow_vector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
-    parser.add_argument('--test_flow_vector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
+    parser.add_argument('--trainFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
+    parser.add_argument('--testFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
 
     args = parser.parse_args()
     print(args)
