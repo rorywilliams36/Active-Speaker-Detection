@@ -10,8 +10,8 @@ from evaluation import *
 from utils import tools
 
 # ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-ids = ['20TAGRElvfE']
-# ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
+# ids = ['20TAGRElvfE']
+ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
@@ -149,7 +149,6 @@ def organise_data(prediction, actual):
     vector = {'Flow' : [], 'Label' : []}
     flow = []
     labels = []
-    print(actual)
     if torch.is_tensor(actual[-1]):
         label = actual[-1].numpy()
     else:
@@ -161,10 +160,6 @@ def organise_data(prediction, actual):
         if prediction['Flow'][i] is not None and (c is not None):
             flow.append(prediction['Flow'][i])
             if len(actual[1].shape) > 1:
-                print(label, c)
-                print(p_faces)
-                print(p_faces[i], actual[1][c])
-                print('------------')
                 labels.append(label[c])
             else:
                 labels.append(label)
