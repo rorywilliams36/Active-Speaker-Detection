@@ -132,7 +132,7 @@ class ActiveSpeaker():
     def check_face(self, current, previous):
         x1,y1,x2,y2 = current
         p_x1, p_y1, p_x2, p_y2 = previous
-        return (x1 <= p_x2) or (x2 >= p_x1) or (y1 <= p_y2) or (y2 >= p_y1)
+        return (x1 <= p_x2) and (x2 >= p_x1) and (y1 <= p_y2) and (y2 >= p_y1)
 
 
 
