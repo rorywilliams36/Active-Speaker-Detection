@@ -10,8 +10,8 @@ from evaluation import *
 from utils import tools
 
 # ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-# ids = ['_mAfwH6i90E']
-ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
+ids = ['20TAGRElvfE']
+# ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
@@ -109,7 +109,7 @@ def filter_faces(predicted_face, actual):
     returns: index of the corresponding face detected compared to the label
     '''
     if len(predicted_face) == 0:
-        return False
+        return None
     
     if torch.is_tensor(actual[1]):
         a_faces = actual[1].numpy()
@@ -119,17 +119,22 @@ def filter_faces(predicted_face, actual):
      # Evaluates if there is more than one label for the frame
     if len(a_faces.shape) > 1:
         for i in range(len(a_faces)):
-            check = False
             # Checks if bounding box for face detected is correct
             # Then compares the predicted label with the actual label and returns the counts
-            if face_evaluate(predicted_face, a_faces[i]):
+            if face_evaluate(predicted_face, a_faces[i]) and check_centres(predicted_face, a_faces[i]):
                 return i
-        return None
+        return False
             
+    return face_evaluate(predicted_face, a_faces) and check_centres(predicted_face, a_faces)
+
+def check_centres(prediction, actual):
+    x1, y1, x2, y2 = prediction * 300
+    a_x1, a_y1, a_x2, a_y2 = actual * 300
+    c_x, c_y = ((a_x1+a_x2)/2, (a_y1+a_y2)/2)
+    return (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2)
+
                 
-    return face_evaluate(predicted_face, a_faces)
-                
-def organise_data(prediction, actual, train=True):
+def organise_data(prediction, actual):
     '''
     Function to organise the flow vectors with corresponding labels
 
@@ -144,6 +149,7 @@ def organise_data(prediction, actual, train=True):
     vector = {'Flow' : [], 'Label' : []}
     flow = []
     labels = []
+    print(actual)
     if torch.is_tensor(actual[-1]):
         label = actual[-1].numpy()
     else:
@@ -151,17 +157,17 @@ def organise_data(prediction, actual, train=True):
 
     p_faces = prediction['Faces']
     for i in range(len(p_faces)):
-        pos = filter_faces(p_faces[i], actual)
-        if (prediction['Flow'][i] is not None) and (pos is not None):
+        c = filter_faces(p_faces[i], actual)
+        if prediction['Flow'][i] is not None and (c is not None):
             flow.append(prediction['Flow'][i])
-            if train:
-                if len(label) > 1:
-                    print(p_faces)
-                    print(actual)
-                    print(label, pos)
-                    labels.append(label[pos])
-                else:
-                    labels.append(label)
+            if len(actual[1].shape) > 1:
+                print(label, c)
+                print(p_faces)
+                print(p_faces[i], actual[1][c])
+                print('------------')
+                labels.append(label[c])
+            else:
+                labels.append(label)
 
     return {'Flow' : flow, 'Label' : labels}
 
