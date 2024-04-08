@@ -130,13 +130,6 @@ def filter_faces(predicted_face, actual):
     if face_evaluate(predicted_face, a_faces) and check_centres(predicted_face, a_faces):
         return True
     return None
-
-def check_centres(prediction, actual):
-    x1, y1, x2, y2 = prediction * 300
-    a_x1, a_y1, a_x2, a_y2 = actual * 300
-    c_x, c_y = ((a_x1+a_x2)/2, (a_y1+a_y2)/2)
-    return (c_x >= x1 and c_x <= x2) and (c_y >= y1 and c_y <= y2)
-
                 
 def organise_data(prediction, actual):
     '''
