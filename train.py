@@ -10,13 +10,15 @@ from evaluation import *
 from utils import tools
 
 # ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-ids = ['_mAfwH6i90E']
+# ids = ['_mAfwH6i90E']
+ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
     parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     parser.add_argument('--train', type=bool, required=True, default=True, help="Perform training (True/False)")
+    parser.add_argument('--loss', type=bool, required=False, default=False, help="Show loss function for model (Training must be selected)")
     parser.add_argument('--test', type=bool, required=False, default=False, help="Perform testing (True/False)")
     parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
     parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training dataset")
@@ -36,6 +38,9 @@ def main():
         Y_train = data['Label'].astype(np.int64)
         classify = SVM(False, None)
         model = classify.train(X_train, Y_train)
+        if args.loss:
+            y = classify.test(X_train)
+            print(classify.loss(X_train, y))
 
     if args.test:
         model = classify.load_parameters()
@@ -101,7 +106,7 @@ def filter_faces(predicted_face, actual):
         predicted_face: array containing coordinates for bounding box
         actual: array/tensor of labels for the frame
     
-    returns: boolean whether face is in label or not
+    returns: index of the corresponding face detected compared to the label
     '''
     if len(predicted_face) == 0:
         return False
@@ -118,8 +123,8 @@ def filter_faces(predicted_face, actual):
             # Checks if bounding box for face detected is correct
             # Then compares the predicted label with the actual label and returns the counts
             if face_evaluate(predicted_face, a_faces[i]):
-                return True
-        return False
+                return i
+        return None
             
                 
     return face_evaluate(predicted_face, a_faces)
@@ -146,15 +151,17 @@ def organise_data(prediction, actual, train=True):
 
     p_faces = prediction['Faces']
     for i in range(len(p_faces)):
-        if filter_faces(p_faces[i], actual):
-
-            if prediction['Flow'][i] is not None:
-                flow.append(prediction['Flow'][i])
-                if train:
-                    if len(actual[1].shape) > 1:
-                        labels.append(label[i])
-                    else:
-                        labels.append(label)
+        pos = filter_faces(p_faces[i], actual)
+        if (prediction['Flow'][i] is not None) and (pos is not None):
+            flow.append(prediction['Flow'][i])
+            if train:
+                if len(label) > 1:
+                    print(p_faces)
+                    print(actual)
+                    print(label, pos)
+                    labels.append(label[pos])
+                else:
+                    labels.append(label)
 
     return {'Flow' : flow, 'Label' : labels}
 
