@@ -10,7 +10,7 @@ from evaluation import *
 from utils import tools
 
 # ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-# ids = ['20TAGRElvfE']
+# ids = ['-5KQ66BBWC4']
 ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
 
 def main():
@@ -72,6 +72,8 @@ def feature_extract(ids, root_dir):
                         data['Flow'].append(filtered['Flow'][i])
                         data['Label'].append(filtered['Label'][i])
 
+        print(f'{video_id} trained')
+
     return data
 
 
@@ -123,9 +125,11 @@ def filter_faces(predicted_face, actual):
             # Then compares the predicted label with the actual label and returns the counts
             if face_evaluate(predicted_face, a_faces[i]) and check_centres(predicted_face, a_faces[i]):
                 return i
-        return False
+        return None
             
-    return face_evaluate(predicted_face, a_faces) and check_centres(predicted_face, a_faces)
+    if face_evaluate(predicted_face, a_faces) and check_centres(predicted_face, a_faces):
+        return True
+    return None
 
 def check_centres(prediction, actual):
     x1, y1, x2, y2 = prediction * 300
@@ -157,10 +161,11 @@ def organise_data(prediction, actual):
     p_faces = prediction['Faces']
     for i in range(len(p_faces)):
         c = filter_faces(p_faces[i], actual)
-        if prediction['Flow'][i] is not None and (c is not None):
+        if (prediction['Flow'][i] is not None) and (c != None):
             flow.append(prediction['Flow'][i])
             if len(actual[1].shape) > 1:
                 labels.append(label[c])
+
             else:
                 labels.append(label)
 
