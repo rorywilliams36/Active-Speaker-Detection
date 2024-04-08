@@ -2,7 +2,7 @@ import joblib
 import pandas as pd
 import numpy as np
 from sklearn import svm
-from sklearn.metrics import log_loss
+from sklearn.metrics import log_loss, hinge_loss
 
 class SVM():
     def __init__(self, load, model_path):
@@ -11,7 +11,7 @@ class SVM():
         elif model_path is not None:
             self.model = self.load_parameters(model_path, False)
         else:
-            self.model = svm.NuSVC(gamma="scale", probability=True, class_weight={0 : 0.6})
+            self.model = svm.NuSVC(gamma="auto", kernel='rbf', probability=True, class_weight={0 : 0.6})
 
     # Trains model
     def train(self, X, Y):
@@ -29,8 +29,14 @@ class SVM():
         Y = self.model.predict(X)
         return Y
 
-    def loss(self):
-        pass
+    def loss(self, X, y):
+        pred_decision = self.model.decision_function(X)
+        hinge = hinge_loss(y, pred_decision)
+
+        pred_probs = self.model.predict_proba(X)
+        lg_loss = log_loss(y, pred_probs)
+        print(f'Log: {lg_loss}')
+        return hinge
 
     def evaluate(self):
         pass
