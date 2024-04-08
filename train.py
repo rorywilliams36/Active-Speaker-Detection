@@ -16,24 +16,39 @@ def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
     parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
-    parser.add_argument('--train', type=bool, required=True, default=False, help="Perform training (True/False)")
-    parser.add_argument('--test', type=bool, required=True, default=False, help="Perform testing (True/False)")
+    parser.add_argument('--train', type=bool, required=True, default=True, help="Perform training (True/False)")
+    parser.add_argument('--test', type=bool, required=False, default=False, help="Perform testing (True/False)")
     parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
-    parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training data")
-    parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing data")
+    parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training dataset")
+    parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing dataset")
     parser.add_argument('--trainFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
     parser.add_argument('--testFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
-    parser.add_argument('--saveTrainVector', type=bool, default=False, required=False, help='Save the training vector to a csv file')
     parser.add_argument('--saveResults', type=bool, default=False, required=False, help='Save results from testing')
-    parser.add_argument('--loadModel', type=str, default=None, required=False, help='Data path to presaved model used for classification')
+    parser.add_argument('--loadCustModel', type=str, default=None, required=False, help='Data path to presaved model used for classification')
+    parser.add_argument('--loadPreviousModel', type=bool, default=True, required=False, help='Boolean value to use the previously trained model')
 
     args = parser.parse_args()
 
-    counts = [0,0,0,0] # tp, fp, tn, fn
-    a_total = 0
-    speaker_diff = []
-    non_speaker_diff = []
-    train_Data = {'Flow' : [], 'Label' : []}
+
+    if args.train:
+        data = feature_extract(ids=ids, root_dir='')
+        data['Label'] = np.array(data['Label']).flatten()
+
+        X_train = np.array(data['Flow'])
+        Y_train = data['Label']
+        classify = SVM(args.loadPreviousModel)
+        model = classify.train(X_train, Y_train)
+
+    if args.test:
+        model = classify.load_parameters()
+        data = feature_extract(ids='', root_dir='')
+        classify = SVM(args.loadPreviousModel, args.loadCustModel)
+        X = np.array(data['Flow'])
+        y = classify.test(X)
+
+
+def feature_extract(ids, root_dir):
+    data = {'Flow' : [], 'Label' : []}
 
     for video_id in ids:
         vid_counts = [0,0,0,0]
@@ -56,40 +71,11 @@ def main():
 
                 if len(filtered['Flow']) > 0 or len(filtered['Label']) > 0:
                     for i in range(len(filtered['Flow'])):
-                        train_Data['Flow'].append(filtered['Flow'][i])
-                        train_Data['Label'].append(filtered['Label'][i])
+                        data['Flow'].append(filtered['Flow'][i])
+                        data['Label'].append(filtered['Label'][i])
 
+    return data
 
-                # ------------------------
-                tp, fp, tn, fn = evaluate(prediction, actual_label)
-
-                vid_counts[0] += tp
-                vid_counts[1] += fp
-                vid_counts[2] += tn
-                vid_counts[3] += fn
-            
-        counts[0] += vid_counts[0]
-        counts[1] += vid_counts[1] 
-        counts[2] += vid_counts[2]
-        counts[3] += vid_counts[3]
-
-        a_total += trainLoader.__len__()
-
-    # display_evaluate(counts, a_total)
-
-
-    # conf_matrix(counts[0], counts[1], counts[2], counts[3])
-
-    # -------------------
-
-    train_Data['Label'] = np.array(train_Data['Label']).flatten()
-
-    X_train = np.array(train_Data['Flow'])
-    # print(X_train)
-    Y_train = train_Data['Label']
-    classify = SVM(False)
-    model = classify.train(X_train, Y_train)
-    test = True
 
 # Function to print results
 def display_results(title, counts, p, r, f):

@@ -5,9 +5,11 @@ from sklearn import svm
 from sklearn.metrics import log_loss
 
 class SVM():
-    def __init__(self, load):
+    def __init__(self, load, model_path):
         if load:
-            self.model = self.load_parameters
+            self.model = self.load_parameters(None, load_previous)
+        elif model_path is not None:
+            self.model = self.load_parameters(model_path, False)
         else:
             self.model = svm.NuSVC(gamma="scale", probability=True, class_weight={0 : 0.6})
 
@@ -23,7 +25,7 @@ class SVM():
         return None
 
     # Tests model
-    def test(self, clf, X):
+    def test(self, X):
         Y = self.model.predict(X)
         return Y
 
@@ -36,14 +38,17 @@ class SVM():
     # Function to save the parameters of the model
     def save_parameters(self, params):
         try:
-            joblib.dump(params,"/models/svm_parameters.pkl")
+            joblib.dump(params,"models/svm_parameters.pkl")
         except:
             print('Error occured when saving model')
 
     # loads presaved model
-    def load_parameters(self):
+    def load_parameters(self, path, prev):
         try:
-            params = joblib.load("/models/svm_parameters.pkl")
+            if (path is not None) and (not prev):
+                params = joblib.load(path)
+            else:
+                params = joblib.load("models/svm_parameters.pkl")
             return params
         except:
             print('Error loading saved model. Train first')
