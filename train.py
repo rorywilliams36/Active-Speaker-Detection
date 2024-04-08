@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 
-from dataLoader import Train_Loader, Val_Loader
+from dataLoader import Train_Loader, Test_Loader
 from asd import ActiveSpeaker
 from model import SVM
 from evaluation import *
@@ -29,14 +29,12 @@ def main():
 
     args = parser.parse_args()
 
-
     if args.train:
         data = feature_extract(ids=ids, root_dir='')
         data['Label'] = np.array(data['Label']).flatten()
-
         X_train = np.array(data['Flow'])
-        Y_train = data['Label']
-        classify = SVM(args.loadPreviousModel)
+        Y_train = data['Label'].astype(np.int64)
+        classify = SVM(False, None)
         model = classify.train(X_train, Y_train)
 
     if args.test:
@@ -46,12 +44,10 @@ def main():
         X = np.array(data['Flow'])
         y = classify.test(X)
 
-
 def feature_extract(ids, root_dir):
     data = {'Flow' : [], 'Label' : []}
 
     for video_id in ids:
-        vid_counts = [0,0,0,0]
         prev_frames = {'Frame' : [], 'Faces' : []}
         trainLoader = Train_Loader(video_id=video_id, root_dir=video_id)
         trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=False)
@@ -59,9 +55,6 @@ def feature_extract(ids, root_dir):
         for images, labels in trainLoaded:
             for i in range(len(images)):
                 actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
-                # print()
-                # print(labels['label'][i])
-                # tools.plot_frame(images[i].numpy())
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
                 prediction = asd.model()
 

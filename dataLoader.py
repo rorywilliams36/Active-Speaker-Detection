@@ -72,8 +72,8 @@ class Train_Loader(Dataset):
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
         labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
-        labels_df = labels_df.replace('NOT_SPEAKING', 0)
-        labels_df = labels_df.replace('SPEAKING', 1)
+        labels_df = labels_df.replace('NOT_SPEAKING', '0')
+        labels_df = labels_df.replace('SPEAKING', '1')
 
         return labels_df
 
@@ -102,7 +102,7 @@ class Train_Loader(Dataset):
         pos_labels = np.array(all_labels.loc[all_labels['Timestamp'] == timestamp])
         return pos_labels
 
-class Val_Loader(Dataset):
+class Test_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
         Train_Loader.__init__()
 
