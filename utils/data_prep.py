@@ -6,13 +6,20 @@ import matplotlib.pyplot as plt
 current_path = os.getcwd()
 current_path = '\\'.join(current_path.split('\\')[:-1])
 ALL_TRAIN_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
+ALL_TEST_LABELS = f'{current_path}/dataset/ava_activespeaker_test_v1.0/'
 
 URL = 'https://s3.amazonaws.com/ava-dataset/trainval/'
-train_files = ['B1MAUxpKaV8.mkv', 'CZ2NP8UsPuE.mkv', '55Ihr6uVIDA.mkv', '4gVsDd8PV9U.mp4']
+train_files = ['B1MAUxpKaV8.mkv']
+test_files = ['2qQs3Y9OJX0.mkv', '4ZpjKfu6Cl8.mkv']
 
 # Converts and saves the video as a series of frames/images
-def split_into_frames(video_id):
-    labels = pd.read_csv(f'{ALL_TRAIN_LABELS}{video_id}-activespeaker.csv')
+def split_into_frames(video_id, test):
+    if test:
+        print(ALL_TEST_LABELS)
+        labels = pd.read_csv(f'{ALL_TEST_LABELS}{video_id}-activespeaker.csv')
+
+    else:
+        labels = pd.read_csv(f'{ALL_TRAIN_LABELS}{video_id}-activespeaker.csv')
     labels.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
 
     output = f'/dataset/{video_id}'
@@ -98,7 +105,7 @@ def get_frame_rate(video_id):
 
 if __name__ == "__main__":
     # ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M'] #, '8VZEwOCQ8bc']
-    split_into_frames('-5KQ66BBWC4')
+    split_into_frames('4ZpjKfu6Cl8', True)
     # for i in ids:
     #     print(i, get_frame_rate(i))
     # download_files(f'{URL}/{train_files[0]}', 'B1MAUxpKaV8')
