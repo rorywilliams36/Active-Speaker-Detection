@@ -105,12 +105,18 @@ class ActiveSpeaker():
                 # Gets magnitude and anglular values for the flow values
                 mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
 
+                # Gets average magnitude and angular values per row from flow vector
+                mag_mean = np.mean(mag, axis=1).flatten()
+                ang_mean = np.mean(ang, axis=1).flatten()
+                flow_vector = np.concatenate((mag_mean, ang_mean), axis=None)
+
+                #### Alternatively
                 # Gets and finds the average of the vertical compoments of optic flow
-                flow_vertical = flow[..., 1]
-                flow_hori = flow[..., 0]
-                hori_mean = np.mean(flow_hori, axis=1)
-                vert_mean = np.mean(flow_vertical, axis=0)
-                flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
+                # flow_vertical = flow[..., 1]
+                # flow_hori = flow[..., 0]
+                # hori_mean = np.mean(flow_hori, axis=1)
+                # vert_mean = np.mean(flow_vertical, axis=0)
+                # flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
 
                 return flow_vector
             return []
