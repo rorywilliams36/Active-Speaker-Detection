@@ -59,6 +59,7 @@ def main():
 def feature_extract(ids, root_dir):
     data = {'Flow' : [], 'Label' : []}
 
+    print('-Extracting features-\n')
     for video_id in ids:
         prev_frames = {'Frame' : [], 'Faces' : []}
         trainLoader = Train_Loader(video_id=video_id, root_dir=video_id)
@@ -79,7 +80,7 @@ def feature_extract(ids, root_dir):
                         data['Flow'].append(filtered['Flow'][i])
                         data['Label'].append(filtered['Label'][i])
 
-        print(f'{video_id} trained')
+        print(f'{video_id} done')
  
     return data
 

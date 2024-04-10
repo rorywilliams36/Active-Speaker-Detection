@@ -8,29 +8,34 @@ from scipy.stats import expon
 
 class SVM():
     def __init__(self, load, model_path):
+        # If training skips to last clause, for testing a pre-saved model is used
         if load:
             self.model = self.load_parameters(None)
         elif model_path is not None:
             self.model = self.load_parameters(model_path)
         else:
             # self.model = svm.NuSVC(gamma="auto", kernel='rbf', probability=True, class_weight={0 : 0.6})
+
+            # Gets random values for gamma and nu based on the exponential distribution in the range (0-1)
             param_grid = {'gamma' : expon(scale=0.1), 'nu' : expon(scale=0.1), 'kernel' : ['rbf']}
             # self.model = GridSearchCV(svm.NuSVC(), param_grid, refit=True, verbose=3)
             self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=100, refit=True, verbose=3)
 
     # Trains model
     def train(self, X, Y):
+        # Checks data in correct shape
         if X.shape[0] == Y.shape[0]:
-            print('Training Starting...')
+            print('\nTraining Starting...')
             self.model.fit(X, Y)
             print('Training Completed')
             return self.model
 
         print('Error during training. Data constructed incorrectly')
-        return None
+        quit()
 
     # Tests model
     def test(self, X):
+        print('Testing')
         Y = self.model.predict(X)
         return Y
 
@@ -51,6 +56,7 @@ class SVM():
         try:
             with open('wb', "models/svm_parameters.pkl") as file:
                 joblib.dump(params, file)
+                print('Model Saved')
         except:
             print('Error occured when saving model')
 
@@ -59,10 +65,14 @@ class SVM():
         try:
             if path is not None:
                 with open('rb', path) as file:
-                    return joblib.load(file)
+                    params = joblib.load(file)
+                    print('Model Loaded Successfully')
             else:
                 with open('rb', "models/svm_parameters.pkl") as file:
-                    return joblib.load(file)
+                    params = joblib.load(file)
+                    print('Model Loaded Successfully')
+
+            return params
         except:
             print('Error loading saved model. Train first')
             quit()
