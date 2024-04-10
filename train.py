@@ -2,6 +2,7 @@ import os, argparse, cv2
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
+from sklearn.metrics import classification_report
 
 from dataLoader import Train_Loader, Test_Loader
 from asd import ActiveSpeaker
@@ -10,7 +11,7 @@ from evaluation import *
 from utils import tools
 
 # ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-# ids = ['-5KQ66BBWC4']
+# ids = ['_mAfwH6i90E']
 ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
 
 def main():
@@ -18,14 +19,15 @@ def main():
     parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
     parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     parser.add_argument('--train', type=bool, required=True, default=True, help="Perform training (True/False)")
-    parser.add_argument('--loss', type=bool, required=False, default=False, help="Show loss function for model (Training must be selected)")
+    parser.add_arguement('--n_iter', type=int, require=False, default=100, help="Number of training iterations performed (Int)")
+    parser.add_argument('--loss', type=bool, required=False, default=False, help="Show loss function for model (Training must be selected) (True/False)")
     parser.add_argument('--test', type=bool, required=False, default=False, help="Perform testing (True/False)")
     parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
     parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training dataset")
     parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing dataset")
     parser.add_argument('--trainFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
     parser.add_argument('--testFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
-    parser.add_argument('--saveResults', type=bool, default=False, required=False, help='Save results from testing')
+    parser.add_argument('--saveResults', type=bool, default=False, required=False, help='Save results from testing (True/False)')
     parser.add_argument('--loadCustModel', type=str, default=None, required=False, help='Data path to presaved model used for classification')
     parser.add_argument('--loadPreviousModel', type=bool, default=True, required=False, help='Boolean value to use the previously trained model')
 
@@ -38,16 +40,21 @@ def main():
         Y_train = data['Label'].astype(np.int64)
         classify = SVM(False, None)
         model = classify.train(X_train, Y_train)
+        classify.save_parameters(model)
+
         if args.loss:
             y = classify.test(X_train)
             print(classify.loss(X_train, y))
 
     if args.test:
-        model = classify.load_parameters()
         data = feature_extract(ids='', root_dir='')
         classify = SVM(args.loadPreviousModel, args.loadCustModel)
         X = np.array(data['Flow'])
         y = classify.test(X)
+
+        if args.evaluate:
+            test_y = data['Label'].astype(np.int64)
+            print(classification_report(y, test_y))
 
 def feature_extract(ids, root_dir):
     data = {'Flow' : [], 'Label' : []}
@@ -73,7 +80,7 @@ def feature_extract(ids, root_dir):
                         data['Label'].append(filtered['Label'][i])
 
         print(f'{video_id} trained')
-
+ 
     return data
 
 
