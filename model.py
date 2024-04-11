@@ -7,7 +7,7 @@ from sklearn.metrics import log_loss, hinge_loss
 from scipy.stats import expon
 
 class SVM():
-    def __init__(self, load, model_path):
+    def __init__(self, load, model_path, n_iter):
         # If training skips to last clause, for testing a pre-saved model is used
         if load:
             self.model = self.load_parameters(None)
@@ -19,7 +19,7 @@ class SVM():
             # Gets random values for gamma and nu based on the exponential distribution in the range (0-1)
             param_grid = {'gamma' : expon(scale=0.1), 'nu' : expon(scale=0.1), 'kernel' : ['rbf']}
             # self.model = GridSearchCV(svm.NuSVC(), param_grid, refit=True, verbose=3)
-            self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=100, refit=True, verbose=3)
+            self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=n_iter, refit=True, verbose=3)
 
     # Trains model
     def train(self, X, Y):
@@ -43,9 +43,9 @@ class SVM():
         pred_decision = self.model.decision_function(X)
         hinge = hinge_loss(y, pred_decision)
 
-        pred_probs = self.model.predict_proba(X)
-        lg_loss = log_loss(y, pred_probs)
-        print(f'Log: {lg_loss}')
+        # pred_probs = self.model.predict_proba(X)
+        # lg_loss = log_loss(y, pred_probs)
+        # print(f'Log: {lg_loss}')
         return hinge
 
     def evaluate(self):
