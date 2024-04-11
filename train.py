@@ -11,7 +11,7 @@ from evaluation import *
 from utils import tools
 
 # ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
-# ids = ['_mAfwH6i90E']
+# ids = ['20TAGRElvfE']
 ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
 
 def main():
@@ -19,7 +19,7 @@ def main():
     parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
     parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     parser.add_argument('--train', type=bool, required=True, default=True, help="Perform training (True/False)")
-    parser.add_arguement('--n_iter', type=int, require=False, default=100, help="Number of training iterations performed (Int)")
+    parser.add_argument('--n_iter', type=int, required=False, default=100, help="Number of training iterations performed (Int)")
     parser.add_argument('--loss', type=bool, required=False, default=False, help="Show loss function for model (Training must be selected) (True/False)")
     parser.add_argument('--test', type=bool, required=False, default=False, help="Perform testing (True/False)")
     parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
@@ -38,7 +38,7 @@ def main():
         data['Label'] = np.array(data['Label']).flatten()
         X_train = np.array(data['Flow'])
         Y_train = data['Label'].astype(np.int64)
-        classify = SVM(False, None)
+        classify = SVM(False, None, args.n_iter)
         model = classify.train(X_train, Y_train)
         classify.save_parameters(model)
 
@@ -48,7 +48,7 @@ def main():
 
     if args.test:
         data = feature_extract(ids='', root_dir='')
-        classify = SVM(args.loadPreviousModel, args.loadCustModel)
+        classify = SVM(args.loadPreviousModel, args.loadCustModel, args.n_iter)
         X = np.array(data['Flow'])
         y = classify.test(X)
 
@@ -83,30 +83,6 @@ def feature_extract(ids, root_dir):
         print(f'{video_id} done')
  
     return data
-
-
-# Function to print results
-def display_results(title, counts, p, r, f):
-    print(f'\n----------- {title} -----------')
-    print('TP,FP,TN,FN: ',counts)
-    print('Correct: ', counts[0]+counts[2])
-    print('Precision: ', p)
-    print('Recall: ', r)
-    print('F-Measure: ', f)
-
-# Function to present results
-def display_evaluate(counts, total):
-    p, r, fm = metrics(counts)
-    non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
-
-    display_results('SPEAKING', counts, p, r, fm)
-    display_results('NON-SPEAKING', [counts[2], counts[3], counts[0], counts[1]], non_p, non_r, non_fm)
-
-    print('Total: ', np.sum(counts))
-    print('Number of Frames ', total)
-    print('\nAverage Precision: ', (p + non_p) /2)
-    print('Macro F1: ', (non_fm+fm) /2)
-
 
 def filter_faces(predicted_face, actual):
     '''
