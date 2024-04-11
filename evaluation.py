@@ -161,3 +161,26 @@ def conf_matrix(tp,fp,tn,fn):
     plt.ylabel('Actual')
     plt.title('Confusion Matrix')
     plt.show()
+
+
+# Function to print results
+def display_results(title, counts, p, r, f):
+    print(f'\n----------- {title} -----------')
+    print('TP,FP,TN,FN: ',counts)
+    print('Correct: ', counts[0]+counts[2])
+    print('Precision: ', p)
+    print('Recall: ', r)
+    print('F-Measure: ', f)
+
+# Function to present results
+def display_evaluate(counts, total):
+    p, r, fm = metrics(counts)
+    non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
+
+    display_results('SPEAKING', counts, p, r, fm)
+    display_results('NON-SPEAKING', [counts[2], counts[3], counts[0], counts[1]], non_p, non_r, non_fm)
+
+    print('Total: ', np.sum(counts))
+    print('Number of Frames ', total)
+    print('\nAverage Precision: ', (p + non_p) /2)
+    print('Macro F1: ', (non_fm+fm) /2)
