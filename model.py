@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.metrics import log_loss, hinge_loss
+from sklearn.metrics import log_loss, hinge_loss, PrecisionRecallDisplay, classification_report
+
 from scipy.stats import expon
 
 class SVM():
@@ -17,7 +18,8 @@ class SVM():
             # self.model = svm.NuSVC(gamma="auto", kernel='rbf', probability=True, class_weight={0 : 0.6})
 
             # Gets random values for gamma and nu based on the exponential distribution in the range (0-1)
-            param_grid = {'gamma' : expon(scale=0.1), 'nu' : expon(scale=0.1), 'kernel' : ['rbf']}
+            param_grid = {'gamma' : expon(scale=0.1), 'nu' : expon(scale=0.1), 'kernel' : ['rbf'], 
+            'class_weight' : [{0:0.75, 1:0.25}, {0:0.6, 1:0.4}, {0:0.5, 1:0.5}, {0:0.7, 1:0.3}, {0:0.67, 1:0.33}, {0:0.8, 1:0.2}], 'probability' : [True]}
             # self.model = GridSearchCV(svm.NuSVC(), param_grid, refit=True, verbose=3)
             self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=n_iter, refit=True, verbose=3)
 
@@ -48,8 +50,8 @@ class SVM():
         # print(f'Log: {lg_loss}')
         return hinge
 
-    def evaluate(self):
-        pass
+    def evaluate(self, pred_y, test_y):
+        return classification_report(pred_y, test_y)
 
     # Function to save the parameters of the model
     def save_parameters(self, params):

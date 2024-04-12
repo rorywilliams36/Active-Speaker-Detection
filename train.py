@@ -2,7 +2,6 @@ import os, argparse, cv2
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
-from sklearn.metrics import classification_report
 
 from dataLoader import Train_Loader, Test_Loader, extract_labels
 from asd import ActiveSpeaker
@@ -38,31 +37,32 @@ def main():
         data['Label'] = np.array(data['Label']).flatten()
         X_train = np.array(data['Flow'])
         Y_train = data['Label'].astype(np.int64)
-        classify = SVM(False, None, args.n_iter)
-        model = classify.train(X_train, Y_train)
-        classify.save_parameters(model)
+        svm = SVM(False, None, args.n_iter)
+        model = svm.train(X_train, Y_train)
+        svm.save_parameters(model)
+        print(model.best_estimator_)
+        print(model.best_params_)
 
         if args.loss:
-            y = classify.test(X_train)
-            print(classify.loss(X_train, y))
-            print(classify.model.predict_proba)
+            y = svm.test(X_train)
+            print(svm.loss(X_train, y))
+            print(svm.model.predict_proba)
 
     if args.test:
         data = feature_extract(ids=test_ids, root_dir='test', train=False)
-        classify = SVM(args.loadPreviousModel, args.loadCustModel, args.n_iter)
+        svm = SVM(args.loadPreviousModel, args.loadCustModel, args.n_iter)
         X = np.array(data['Flow'])
-        print(classify.model.best_params_)
-        y = classify.test(X)
+        y = svm.test(X)
 
         if args.evaluate:
             data['Label'] = np.array(data['Label']).flatten()
             test_y = data['Label'].astype(np.int64)
-            print(classification_report(y, test_y))
+            print(svm.evaluate(y, test_y))
 
 def feature_extract(ids, root_dir, train):
     data = {'Flow' : [], 'Label' : []}
 
-    print('-Extracting features-\n')
+    print('Extracting features\n')
     for video_id in ids:
         prev_frames = {'Frame' : [], 'Faces' : []}
         if train:
