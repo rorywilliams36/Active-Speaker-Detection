@@ -4,36 +4,37 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import classification_report
 
-from dataLoader import Train_Loader, Test_Loader
+from dataLoader import Train_Loader, Test_Loader, extract_labels
 from asd import ActiveSpeaker
 from model import SVM
 from evaluation import *
 from utils import tools
 
-ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE']
+train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE']
+test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0']
 # ids = ['20TAGRElvfE']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
     parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
-    parser.add_argument('--train', type=bool, required=True, default=True, help="Perform training (True/False)")
+    parser.add_argument('--train', action='store_true', help="Perform training (True/False)")
     parser.add_argument('--n_iter', type=int, required=False, default=100, help="Number of training iterations performed (Int)")
-    parser.add_argument('--loss', type=bool, required=False, default=False, help="Show loss function for model (Training must be selected) (True/False)")
-    parser.add_argument('--test', type=bool, required=False, default=False, help="Perform testing (True/False)")
-    parser.add_argument('--evaluate', type=bool, default=False, required=False, help="Perform Evaluation (True/False)")
+    parser.add_argument('--loss', action='store_true', help="Show loss function for model (Training must be selected) (True/False)")
+    parser.add_argument('--test', action='store_true', help="Perform testing (True/False)")
+    parser.add_argument('--evaluate',  action='store_true', required=False, help="Perform Evaluation (True/False)")
     parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training dataset")
     parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing dataset")
     parser.add_argument('--trainFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
     parser.add_argument('--testFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
-    parser.add_argument('--saveResults', type=bool, default=False, required=False, help='Save results from testing (True/False)')
+    parser.add_argument('--saveResults',  action='store_true', required=False, help='Save results from testing (True/False)')
     parser.add_argument('--loadCustModel', type=str, default=None, required=False, help='Data path to presaved model used for classification')
     parser.add_argument('--loadPreviousModel', type=bool, default=True, required=False, help='Boolean value to use the previously trained model')
 
     args = parser.parse_args()
 
     if args.train:
-        data = feature_extract(ids=ids, root_dir='')
+        data = feature_extract(ids=train_ids, root_dir='train', train=True)
         data['Label'] = np.array(data['Label']).flatten()
         X_train = np.array(data['Flow'])
         Y_train = data['Label'].astype(np.int64)
@@ -44,29 +45,36 @@ def main():
         if args.loss:
             y = classify.test(X_train)
             print(classify.loss(X_train, y))
+            print(classify.model.predict_proba)
 
     if args.test:
-        data = feature_extract(ids='', root_dir='')
+        data = feature_extract(ids=test_ids, root_dir='test', train=False)
         classify = SVM(args.loadPreviousModel, args.loadCustModel, args.n_iter)
         X = np.array(data['Flow'])
+        print(classify.model.best_params_)
         y = classify.test(X)
 
         if args.evaluate:
+            data['Label'] = np.array(data['Label']).flatten()
             test_y = data['Label'].astype(np.int64)
             print(classification_report(y, test_y))
 
-def feature_extract(ids, root_dir):
+def feature_extract(ids, root_dir, train):
     data = {'Flow' : [], 'Label' : []}
 
     print('-Extracting features-\n')
     for video_id in ids:
         prev_frames = {'Frame' : [], 'Faces' : []}
-        trainLoader = Train_Loader(video_id=video_id, root_dir=video_id)
-        trainLoaded = DataLoader(trainLoader, batch_size=64, num_workers=0, shuffle=False)
+        if train:
+            dataLoader = Train_Loader(video_id, root_dir)
+        else:
+            dataLoader = Test_Loader(video_id, root_dir)
 
-        for images, labels in trainLoaded:
+        dataLoaded = DataLoader(dataLoader, batch_size=64, num_workers=0, shuffle=False)
+
+        for images, labels in dataLoaded:
             for i in range(len(images)):
-                actual_label = trainLoader.extract_labels(trainLoader.labels, labels, i)
+                actual_label = extract_labels(dataLoader.labels, labels, i)
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
                 prediction = asd.model()
 

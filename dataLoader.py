@@ -9,8 +9,8 @@ from utils import tools
 
 current_path = os.getcwd()
 ID_LIST = open(f'{current_path}/dataset/ava_speech_file_names_v1.txt', 'r')
-ALL_TRAIN_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
-TEST_LABELS = f'{current_path}/dataset/ava_activespeaker_val_v1.0/'
+TRAIN_LABELS = f'{current_path}/dataset/ava_activespeaker_train_v1.0/'
+TEST_LABELS = f'{current_path}/dataset/ava_activespeaker_test_v1.0/'
 
 class Train_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'train'):
@@ -25,9 +25,9 @@ class Train_Loader(Dataset):
         '''
 
         self.root_dir = root_dir # directory holding the data/frames
-        self.data_path = os.path.join(f'{current_path}/dataset', self.root_dir) # path to respective dataset folder
         self.video_id = video_id
-        self.frames = self.sort_frames()
+        self.data_path = os.path.join(f'{current_path}/dataset/{self.root_dir}', self.video_id) # path to respective dataset folder
+        self.frames = sort_frames(self.data_path)
         self.labels = self.prep_labels()
 
     # Returns number of items in dataset
@@ -68,7 +68,7 @@ class Train_Loader(Dataset):
         frame_name = (self.frames[-1]).split('/')[-1].split('\\')[-1]
 
         # Read csv file and create columns
-        labels_df = pd.read_csv(f'{ALL_TRAIN_LABELS}{self.video_id}-activespeaker.csv')
+        labels_df = pd.read_csv(f'{TRAIN_LABELS}{self.video_id}-activespeaker.csv')
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
         labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
@@ -77,26 +77,6 @@ class Train_Loader(Dataset):
 
         return labels_df
 
-    # Since file are returned in arbitary order we sort them by timestamp
-    # Credit: https://stackoverflow.com/questions/4813061/non-alphanumeric-list-order-from-os-listdir/48030307#48030307
-    def sort_frames(self):
-        frames = glob.glob(f"{self.data_path}/*.jpg")
-        convert = lambda text: int(text) if text.isdigit() else text.lower()
-        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
-        return sorted(frames, key=alphanum_key)
-
-    # Temporary workaround
-    # Due to all tensors loaded having to be the same length if a frame has multiple labels only one is loaded 
-    # This extracts and gets all labels for the corresponding frame
-    def extract_labels(self, all_labels, current_labels, index):
-        timestamp = float(current_labels['timestamp'][index])
-        pos_labels = np.array(all_labels.loc[all_labels['Timestamp'] == timestamp])[:, 1:-1]
-
-        if len(pos_labels) > 1:
-            return timestamp, pos_labels[:, 1:5], pos_labels[:, -1]
-
-        return current_labels['timestamp'][index], current_labels['bnd_box'][index], current_labels['label'][index]
-
     def extract_all(self, all_labels, current_labels, index):
         timestamp = float(current_labels[0])
         pos_labels = np.array(all_labels.loc[all_labels['Timestamp'] == timestamp])
@@ -104,7 +84,7 @@ class Train_Loader(Dataset):
 
 class Test_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
-        Train_Loader.__init__()
+        Train_Loader.__init__(self, video_id, root_dir)
 
     # Returns number of items in dataset
     def __len__(self):
@@ -127,14 +107,31 @@ class Test_Loader(Dataset):
         # Gets corresponding label from the timestamp
         # Also remove irrelevant ids/values from label
         p_labels = np.array(self.labels.loc[self.labels['Timestamp'] == timestamp])[:, 1:-1]
+
         # Get dict of labels
         label = create_labels_dict(p_labels)
 
-        # Transform frame (recaling and Grayscale)
+        # Transform frame (rescaling and Grayscale)
         frame = transform_frame(frame)
 
         # Return frames and labels as tensors
-        return torch.from_numpy(frame), label
+        return torch.from_numpy(frame), convert_label_to_tensor(label)
+
+        # Since we are not using every frame from the data and only the first x frames
+    # Also intrduce columns for easier indexing
+    def prep_labels(self):
+        # Gets the last frame recorded
+        frame_name = (self.frames[-1]).split('/')[-1].split('\\')[-1]
+
+        # Read csv file and create columns
+        labels_df = pd.read_csv(f'{TEST_LABELS}{self.video_id}-activespeaker.csv')
+        labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
+        labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
+        labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
+        labels_df = labels_df.replace('NOT_SPEAKING', '0')
+        labels_df = labels_df.replace('SPEAKING', '1')
+
+        return labels_df
 
 # Transforms frame by applying gaussian blur, histogram eq and resizing
 def transform_frame(frame):
@@ -171,6 +168,25 @@ def convert_label_to_tensor(label):
         label_tensors['label'] = arr[-1]
 
     return label_tensors
+
+# Since file are returned in arbitary order we sort them by timestamp
+# Credit: https://stackoverflow.com/questions/4813061/non-alphanumeric-list-order-from-os-listdir/48030307#48030307
+def sort_frames(path):
+    frames = glob.glob(f"{path}/*.jpg")
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
+    return sorted(frames, key=alphanum_key)
+
+
+
+def extract_labels(all_labels, current_labels, index):
+    timestamp = float(current_labels['timestamp'][index])
+    pos_labels = np.array(all_labels.loc[all_labels['Timestamp'] == timestamp])[:, 1:-1]
+
+    if len(pos_labels) > 1:
+        return timestamp, pos_labels[:, 1:5], pos_labels[:, -1]
+
+    return current_labels['timestamp'][index], current_labels['bnd_box'][index], current_labels['label'][index]
     
 if __name__ == "__main__":
     ds = Train_Loader(video_id='_mAfwH6i90E', root_dir='_mAfwH6i90E')
