@@ -15,12 +15,9 @@ class SVM():
         elif model_path is not None:
             self.model = self.load_parameters(model_path)
         else:
-            # self.model = svm.NuSVC(gamma="auto", kernel='rbf', probability=True, class_weight={0 : 0.6})
-
             # Gets random values for gamma and nu based on the exponential distribution in the range (0-1)
             param_grid = {'gamma' : expon(scale=0.1), 'nu' : expon(scale=0.1), 'kernel' : ['rbf'], 
-            'class_weight' : [{0:0.75, 1:0.25}, {0:0.6, 1:0.4}, {0:0.5, 1:0.5}, {0:0.7, 1:0.3}, {0:0.67, 1:0.33}, {0:0.8, 1:0.2}], 'probability' : [True]}
-            # self.model = GridSearchCV(svm.NuSVC(), param_grid, refit=True, verbose=3)
+            'class_weight' : [{0:0.65, 1:0.35}, {0:0.6, 1:0.4}, {0:0.5, 1:0.5}, {0:0.7, 1:0.3}, {0:0.67, 1:0.33}, {0:0.55, 1:0.45}], 'probability' : [True]}
             self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=n_iter, refit=True, verbose=3)
 
     # Trains model
@@ -76,7 +73,7 @@ class SVM():
 
             return params
         except:
-            print('Error loading saved model. Train first')
+            print('Error loading saved model. Train first or check path')
             quit()
 
     # Saves the predicted results to a new file
@@ -87,6 +84,8 @@ class SVM():
     def save_train_vector(self, train_data):
         try:
             df = pd.DataFrame.from_dict(train_Data)
-            df.to_csv('train_vector.csv', index=True)
+            with open('train_vector.csv', 'wb') as file:
+                df.to_csv(file, index=True)
+            print('Training Vector Saved')
         except:
-            print('Error occured when saving data')
+            print('Error occured when saving training data')
