@@ -15,8 +15,6 @@ test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
-    parser.add_argument('--face_detect_threshold', type=float, default='0.5', required=False, help="Confidence score for face detection")
-    parser.add_argument('--face_detect_model', type=str, default='res10_300x300_ssd_iter_140000.caffemodel', help="OpenCV model used for face detection")
     parser.add_argument('--train', action='store_true', help="Perform training (True/False)")
     parser.add_argument('--n_iter', type=int, required=False, default=100, help="Number of training iterations performed (Int)")
     parser.add_argument('--loss', action='store_true', help="Show loss function for model (Training must be selected) (True/False)")
@@ -33,7 +31,7 @@ def main():
     args = parser.parse_args()
 
     if args.train:
-        data = feature_extract(ids=train_ids, root_dir='train', train=True)
+        data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True)
         data['Label'] = np.array(data['Label']).flatten()
         X_train = np.array(data['Flow'])
         Y_train = data['Label'].astype(np.int64)
@@ -49,7 +47,7 @@ def main():
             print(svm.model.predict_proba)
 
     if args.test:
-        data = feature_extract(ids=test_ids, root_dir='test', train=False)
+        data = feature_extract(ids=test_ids, root_dir=args.testDataPath, train=False)
         svm = SVM(args.loadPreviousModel, args.loadCustModel, args.n_iter)
         X = np.array(data['Flow'])
         y = svm.test(X)
