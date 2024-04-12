@@ -24,35 +24,11 @@ class ActiveSpeaker():
 
         predicted = {'Faces' : [], 'Flow' : [], 'Label' : []}
         for face in faces:
-            face_region, lip_pixels, flow_vector = self.feature_detection(face)
-
-            # Set lip pixels values
-            speaking = 'NOT_SPEAKING' 
-            if len(lip_pixels) > 0 and len(face_region) > 0:
-                centre_upper = lip_pixels[3]
-                centre_lower = lip_pixels[9]
-                left = lip_pixels[0]
-                right = lip_pixels[6]
-
-                # Sets bounding box for lips
-                lip_box = [left[0]-2, centre_upper[1]-5, right[0]+2, centre_lower[1]+5]
-                lip_region = self.frame[lip_box[1]:lip_box[3], lip_box[0]:lip_box[2]]
-
-                speaking = self.speaker_detection(face_region, lip_pixels, lip_box)
-                
-                predicted['Faces'].append(face[3:7])
-                predicted['Label'].append(speaking)
-                predicted['Flow'].append(flow_vector)
+            face_region, lip_pixels, flow_vector = self.feature_detection(face)    
+            predicted['Faces'].append(face[3:7])
+            predicted['Flow'].append(flow_vector)
 
         return predicted
-
-    # Contains the values/items from the last 10 frames
-    # Updates stack by adding new items and removing if greater than 10
-    def update_stacks(self, stack, item, pointer):
-        if len(stack) >= pointer:
-            _ = stack.pop(0)
-        stack = stack.append(item)
-        return stack
 
     # Gets lips using dlib shape predictor model
     def feature_detection(self, face):
@@ -88,7 +64,7 @@ class ActiveSpeaker():
                 if len(prev_faces) > 0:
                     for face in prev_faces:
                         p_face = self.get_face_coords(face, 300, 300)
-                        if self.check_face([x1,y1,x2,y2], p_face):
+                        if self.check_face([x1,y1,x2,y2], p_face): # and self.check_centres([x1,y1,x2,y2], p_face):
                             x1,y1,x2,y2 = p_face
                             break
 
@@ -139,45 +115,3 @@ class ActiveSpeaker():
         x1,y1,x2,y2 = current
         p_x1, p_y1, p_x2, p_y2 = previous
         return (x1 <= p_x2) and (x2 >= p_x1) and (y1 <= p_y2) and (y2 >= p_y1)
-
-
-
-
-
-
-    # Unused code/ about to be removed
-    def speaker_detection(self, face_region, lip_pixels, lip_box):
-        score = 0
-        centre_lip = ((lip_box[0] + lip_box[2])/2, (lip_box[1] + lip_box[-1])/2)
-
-        centre_upper = lip_pixels[3]
-        centre_lower = lip_pixels[9]
-        left = lip_pixels[0]
-        right = lip_pixels[6]
-
-        left_angle = self.mouth_angle(centre_lower, left, centre_lip) + self.mouth_angle(centre_upper, left, centre_lip)
-        right_angle = self.mouth_angle(centre_lower, right, centre_lip) + self.mouth_angle(centre_upper, right, centre_lip)
-
-        # print(left_angle, right_angle)
-        if left_angle > self.angle_thresh[0] or right_angle > self.angle_thresh[1]:
-            return 'SPEAKING'
-        return 'NOT_SPEAKING'
-
-    def mouth_angle(self, point1, point2, centre_point):
-        '''
-        Args: 
-            Point1: first point (generally centre of upper/lower lip)
-            Point2: Second coordinate (generally either far left/right point)
-            Centre_point: Centre pixel of the lip
-
-        Returns: Angle of mouth opening from the given points (rads)
-        '''
-
-        # Find the opposite and hypotenuse
-        opposite = np.linalg.norm(point1 - centre_point)
-        hypotenuse = np.linalg.norm(point2 - centre_point)
-
-        # Get angle
-        if opposite <= hypotenuse and opposite > 0:
-            return np.arcsin(opposite / hypotenuse)
-        return 0
