@@ -54,7 +54,7 @@ class SVM():
     # Function to save the parameters of the model
     def save_parameters(self, params):
         try:
-            with open('wb', "models/svm_parameters.pkl") as file:
+            with open("models/svm_parameters.pkl", 'wb') as file:
                 joblib.dump(params, file)
                 print('Model Saved')
         except:
@@ -64,11 +64,11 @@ class SVM():
     def load_parameters(self, path):
         try:
             if path is not None:
-                with open('rb', path) as file:
+                with open(path, 'rb') as file:
                     params = joblib.load(file)
                     print('Model Loaded Successfully')
             else:
-                with open('rb', "models/svm_parameters.pkl") as file:
+                with open("models/svm_parameters.pkl", 'rb') as file:
                     params = joblib.load(file)
                     print('Model Loaded Successfully')
 

@@ -10,9 +10,8 @@ from model import SVM
 from evaluation import *
 from utils import tools
 
-# ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M']
+ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE']
 # ids = ['20TAGRElvfE']
-ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '20TAGRElvfE', '-5KQ66BBWC4', '7nHkh4sP5Ks']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
