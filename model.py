@@ -15,10 +15,20 @@ class SVM():
         elif model_path is not None:
             self.model = self.load_parameters(model_path)
         else:
+            nus = [0.4875, 0.49, 0.4925, 0.495, 0.2975, 0.5, 0.5125, 0.525,]
+            gammas = [0.0275, 0.028, 0.0285, 0.02875, 0.029, 0.0295, 0.03, 0.0325]
             # Gets random values for gamma and nu based on the exponential distribution in the range (0-1)
-            param_grid = {'gamma' : expon(scale=0.1), 'nu' : expon(scale=0.1), 'kernel' : ['rbf'], 
-            'class_weight' : [{0:0.65, 1:0.35}, {0:0.6, 1:0.4}, {0:0.5, 1:0.5}, {0:0.7, 1:0.3}, {0:0.67, 1:0.33}, {0:0.55, 1:0.45}], 'probability' : [True]}
-            self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=n_iter, refit=True, verbose=3)
+            # param_grid = {'gamma' : expon(scale=0.1), 'nu' : expon(scale=0.1), 'kernel' : ['rbf'], 
+            # 'class_weight' : [{0:0.7, 1:0.3}, {0:0.65, 1:0.35}, {0:0.6, 1:0.4}, {0:0.5, 1:0.5}],'probability' : [True]}
+            # self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=n_iter, refit=True, verbose=3)
+
+
+            param_grid = {'gamma' : gammas, 'nu' : nus, 'kernel' : ['rbf'], 
+            'class_weight' : [{0:0.7, 1:0.3}, {0:0.65, 1:0.35}, {0:0.6, 1:0.4}, {0:0.675, 1:0.325}]}
+            self.model = GridSearchCV(svm.NuSVC(), param_grid, refit=True, verbose=3)
+
+            ### Best found:
+            # self.model = svm.NuSVC(gamma=0.029, nu=0.49 , class_weight = {0:0.7, 1:0.3})
 
     # Trains model
     def train(self, X, Y):
