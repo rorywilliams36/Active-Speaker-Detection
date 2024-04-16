@@ -10,7 +10,7 @@ from utils import tools
 landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
-    def __init__(self, frame, face_thresh: float = 0.5, angle_thresh: tuple = (0.78, 0.74),
+    def __init__(self, frame,
                 prev_frames: dict = {'Frame' : [], 'Faces' : []}):
         self.frame = frame.numpy()
         self.prev_frames = prev_frames
@@ -24,7 +24,7 @@ class ActiveSpeaker():
 
         predicted = {'Faces' : [], 'Flow' : [], 'Label' : []}
         for face in faces:
-            face_region, lip_pixels, flow_vector = self.feature_detection(face)    
+            flow_vector = self.feature_detection(face)    
             predicted['Faces'].append(face[3:7])
             predicted['Flow'].append(flow_vector)
 
@@ -44,66 +44,66 @@ class ActiveSpeaker():
         points = face_utils.shape_to_np(points)
 
         if len(points) > 0:
-            flow_vector = self.dense_optic_flow(face, face_region, points)
+            flow_vector = self.dense_optic_flow(face, face_region)
 
         try:
-            return face_region, points[48:-1], flow_vector
+            return flow_vector
         except:
-            return [], [], []
+            return []
 
-    def dense_optic_flow(self, face, face_region, points):
+    def dense_optic_flow(self, face, face_region):
         H = 64
         prev_face = None
         if len(self.prev_frames['Frame']) > 0:
             x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
-            if len(points) > 0:
-                prev_frame = self.prev_frames['Frame']
-                prev_faces = self.prev_frames['Faces' ]
+            prev_frame = self.prev_frames['Frame']
+            prev_faces = self.prev_frames['Faces' ]
 
-                # Checks if the faces used are in the previous frames
-                if len(prev_faces) > 0:
-                    for face in prev_faces:
-                        p_face = self.get_face_coords(face, 300, 300)
-                        if self.check_face([x1,y1,x2,y2], p_face): # and self.check_centres([x1,y1,x2,y2], p_face):
-                            x1,y1,x2,y2 = p_face
-                            break
+            # Checks if the faces used are in the previous frames
+            if len(prev_faces) > 0:
+                for face in prev_faces:
+                    p_face = self.get_face_coords(face, 300, 300)
+                    if self.check_face([x1,y1,x2,y2], p_face): # and self.check_centres([x1,y1,x2,y2], p_face):
+                        x1,y1,x2,y2 = p_face
+                        break
 
-                # If no face is detected use the same coordinates from before
-                prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
+            # If no face is detected use the same coordinates from before
+            prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
 
-                prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
-                current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
+            prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
+            current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
-                # Gets dense optic flow values
-                flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
-                                                    winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
+            # Gets dense optic flow values
+            flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
+                                                winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
 
-                # Gets magnitude and anglular values for the flow values
-                mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+            # Gets and finds the average of the vertical compoments of optic flow
+            flow_vertical = flow[..., 1]
+            flow_hori = flow[..., 0]
+            hori_mean = np.mean(flow_hori, axis=1)
+            vert_mean = np.mean(flow_vertical, axis=0)
+            flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
 
-                # Gets average magnitude and angular values per row from flow vector
-                # mag_mean1 = np.mean(mag, axis=1).flatten()
-                # ang_mean = np.mean(ang, axis=1).flatten()
-                # hori_vector = np.concatenate((mag_mean, ang_mean), axis=None)
 
-                # Gets vertical averages
-                # mag_mean2 = np.mean(mag, axis=0).flatten()
-                # ang_mean = np.mean(ang, axis=0).flatten()
-                # vert_vector = np.concatenate((mag_mean, ang_mean), axis=None)
+            ### Alternative Methods
+            # Gets magnitude and anglular values for the flow values
+            # mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
 
-                # flow_vector = np.concatenate((hori_vector, vert_vector), axis=None)
-                # flow_vector = np.concatenate((mag_mean1, mag_mean2))
+            # Gets average magnitude and angular values per row from flow vector
+            # mag_mean1 = np.mean(mag, axis=1).flatten()
+            # ang_mean = np.mean(ang, axis=1).flatten()
+            # hori_vector = np.concatenate((mag_mean, ang_mean), axis=None)
 
-                #### Alternatively
-                # Gets and finds the average of the vertical compoments of optic flow
-                flow_vertical = flow[..., 1]
-                flow_hori = flow[..., 0]
-                hori_mean = np.mean(flow_hori, axis=1)
-                vert_mean = np.mean(flow_vertical, axis=0)
-                flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
+            # Gets vertical averages
+            # mag_mean2 = np.mean(mag, axis=0).flatten()
+            # ang_mean = np.mean(ang, axis=0).flatten()
+            # vert_vector = np.concatenate((mag_mean, ang_mean), axis=None)
 
-                return flow_vector
-            return []
+            # flow_vector = np.concatenate((hori_vector, vert_vector), axis=None)
+            # flow_vector = np.concatenate((mag_mean1, mag_mean2))
+
+            return flow_vector
+        return []
 
     def get_face_coords(self, face, h, w):
         # Gets coordinates of bounding box
