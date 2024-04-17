@@ -142,3 +142,34 @@ def plot_points(img, points):
     cv2.imshow('img', img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+# Plots optical flow representation using current and previous frames
+# Credit: https://docs.opencv.org/4.x/d4/dee/tutorial_optical_flow.html
+def flow_img(flow, face_region, prev_face):
+    hsv = np.zeros_like(face_region)
+    current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
+    hsv[..., 1] = 255
+    mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+    hsv[..., 0] = ang*180/np.pi/2
+    hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+    flow_img = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+
+    plt.figure(figsize=(10,5))
+    plt.subplot(1,3,1)
+    plt.title('Previous Frame')
+    plt.axis('off')
+    plt.imshow(prev_face, cmap='gray')
+
+    plt.subplot(1,3,2)
+    plt.title('Current Frame')
+    plt.axis('off')
+    plt.imshow(current_face, cmap='gray')
+
+    plt.subplot(1,3,3)
+    plt.title('Optic Flow')
+    plt.axis('off')
+    plt.imshow(flow_img)
+
+    plt.show()
