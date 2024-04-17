@@ -2,6 +2,7 @@ import cv2, dlib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import hsv_to_rgb
 
 from imutils import face_utils
 from faceDetection.faceDetector import FaceDetection
@@ -14,11 +15,9 @@ class ActiveSpeaker():
                 prev_frames: dict = {'Frame' : [], 'Faces' : []}):
         self.frame = frame.numpy()
         self.prev_frames = prev_frames
-        self.face_thresh = face_thresh
-        self.angle_thresh = angle_thresh
 
     def model(self):
-        face_detect = FaceDetection(self.frame, threshold=self.face_thresh)
+        face_detect = FaceDetection(self.frame)
         faces = face_detect.detect()
         img_diff = []
 
@@ -84,6 +83,7 @@ class ActiveSpeaker():
             vert_mean = np.mean(flow_vertical, axis=0)
             flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
 
+            # tools.flow_img(flow, face_region, prev_face)       
 
             ### Alternative Methods
             # Gets magnitude and anglular values for the flow values
