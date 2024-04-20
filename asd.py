@@ -2,11 +2,11 @@ import cv2, dlib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import hsv_to_rgb
 
 from imutils import face_utils
 from faceDetection.faceDetector import FaceDetection
 from utils import tools
+from utils.misc import *
 
 landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
@@ -33,12 +33,13 @@ class ActiveSpeaker():
     def feature_detection(self, face):
         h, w = self.frame.shape[:2]
         H = 64
-        x1,y1,x2,y2 = self.get_face_coords(face, h, w)
+        x1,y1,x2,y2 = get_face_coords(face, h, w)
 
         # Extracts and resizes the face detected from the frame
         face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
         gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
+        # Apply dlib landmarks to face
         points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
         points = face_utils.shape_to_np(points)
 
@@ -48,21 +49,22 @@ class ActiveSpeaker():
         try:
             return flow_vector
         except:
-            return []
+            return None
 
     def dense_optic_flow(self, face, face_region):
         H = 64
         prev_face = None
         if len(self.prev_frames['Frame']) > 0:
-            x1, y1, x2, y2 = self.get_face_coords(face, 300, 300)
+            x1, y1, x2, y2 = get_face_coords(face, 300, 300)
             prev_frame = self.prev_frames['Frame']
             prev_faces = self.prev_frames['Faces' ]
 
             # Checks if the faces used are in the previous frames
             if len(prev_faces) > 0:
                 for face in prev_faces:
-                    p_face = self.get_face_coords(face, 300, 300)
-                    if self.check_face([x1,y1,x2,y2], p_face): # and self.check_centres([x1,y1,x2,y2], p_face):
+                    p_face = get_face_coords(face, 300, 300)
+                    # Change to percent bounding box overlapping
+                    if check_face([x1,y1,x2,y2], p_face):
                         x1,y1,x2,y2 = p_face
                         break
 
@@ -76,7 +78,7 @@ class ActiveSpeaker():
             flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
                                                 winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
 
-            # Gets and finds the average of the vertical compoments of optic flow
+            # Gets and finds the average of the horizontal and vertical compoments of optic flow
             flow_vertical = flow[..., 1]
             flow_hori = flow[..., 0]
             hori_mean = np.mean(flow_hori, axis=1)
@@ -103,23 +105,4 @@ class ActiveSpeaker():
             # flow_vector = np.concatenate((mag_mean1, mag_mean2))
 
             return flow_vector
-        return []
-
-    def get_face_coords(self, face, h, w):
-        # Gets coordinates of bounding box
-        if len(face) > 4:
-            x1, y1, x2, y2 = face[3:7] * h
-        else:
-            x1, y1, x2, y2 = face * h
-
-        # Grabs extra pixels around bounding box to account for errors and also check ranges
-        x1 = max(round(float(x1))-5, 0)
-        y1 = max(round(float(y1))-5, 0)
-        x2 = min(round(float(x2))+5, w)
-        y2 = min(round(float(y2))+5, h)
-        return x1, y1, x2, y2
-
-    def check_face(self, current, previous):
-        x1,y1,x2,y2 = current
-        p_x1, p_y1, p_x2, p_y2 = previous
-        return (x1 <= p_x2) and (x2 >= p_x1) and (y1 <= p_y2) and (y2 >= p_y1)
+        return None

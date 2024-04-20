@@ -9,22 +9,21 @@ from model import SVM
 from evaluation import *
 from utils import tools
 
-train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE']
+train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', 'Db19rWN5BGo']
 test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0']
-# ids = ['20TAGRElvfE']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--train', action='store_true', help="Perform training (True/False)")
     parser.add_argument('--n_iter', type=int, required=False, default=100, help="Number of training iterations performed (Int)")
-    parser.add_argument('--loss', action='store_true', help="Show loss function for model (Training must be selected) (True/False)")
-    parser.add_argument('--test', action='store_true', help="Perform testing (True/False)")
-    parser.add_argument('--evaluate',  action='store_true', required=False, help="Perform Evaluation (True/False)")
+    parser.add_argument('--loss', action='store_true', help="Show loss function for model (Training must be selected)")
+    parser.add_argument('--test', action='store_true', help="Perform testing")
+    parser.add_argument('--evaluate',  action='store_true', required=False, help="Perform Evaluation")
     parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training dataset")
     parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing dataset")
     parser.add_argument('--trainFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
     parser.add_argument('--testFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
-    parser.add_argument('--saveResults',  action='store_true', required=False, help='Save results from testing (True/False)')
+    parser.add_argument('--saveResults',  action='store_true', required=False, help='Save results from testing')
     parser.add_argument('--loadCustModel', type=str, default=None, required=False, help='Data path to presaved model used for classification')
     parser.add_argument('--loadPreviousModel', type=bool, default=True, required=False, help='Boolean value to use the previously trained model')
 
@@ -49,6 +48,7 @@ def main():
     if args.test:
         data = feature_extract(ids=test_ids, root_dir=args.testDataPath, train=False)
         svm = SVM(args.loadPreviousModel, args.loadCustModel, args.n_iter)
+        print(data['Flow'])
         X = np.array(data['Flow'])
         y = svm.test(X)
 
