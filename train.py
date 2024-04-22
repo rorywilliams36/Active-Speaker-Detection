@@ -9,8 +9,8 @@ from model import SVM
 from evaluation import *
 from utils import tools
 
-train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', 'Db19rWN5BGo']
-test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0']
+train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg']
+test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'KHHgQ_Pe4cI']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--testFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values for testing')
     parser.add_argument('--saveResults',  action='store_true', required=False, help='Save results from testing')
     parser.add_argument('--loadCustModel', type=str, default=None, required=False, help='Data path to presaved model used for classification')
-    parser.add_argument('--loadPreviousModel', type=bool, default=True, required=False, help='Boolean value to use the previously trained model')
+    parser.add_argument('--loadPreviousModel', action='store_true', required=False, help='Boolean value to use the previously trained model')
 
     args = parser.parse_args()
 
