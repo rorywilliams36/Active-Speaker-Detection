@@ -64,11 +64,8 @@ class Train_Loader(Dataset):
     # Since we are not using every frame from the data and only the first x frames
     # Also intrduce columns for easier indexing
     def prep_labels(self):
-        # Gets the last frame recorded
-        frame_name = (self.frames[-1]).split('/')[-1].split('\\')[-1]
-
         # Read csv file and create columns
-        labels_df = pd.read_csv(f'{TRAIN_LABELS}{self.video_id}-activespeaker.csv')
+        labels_df = pd.read_csv(f'{TRAIN_LABELS}{self.video_id}-activespeaker.csv', header=None)
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
         labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
@@ -120,11 +117,8 @@ class Test_Loader(Dataset):
         # Since we are not using every frame from the data and only the first x frames
     # Also intrduce columns for easier indexing
     def prep_labels(self):
-        # Gets the last frame recorded
-        frame_name = (self.frames[-1]).split('/')[-1].split('\\')[-1]
-
         # Read csv file and create columns
-        labels_df = pd.read_csv(f'{TEST_LABELS}{self.video_id}-activespeaker.csv')
+        labels_df = pd.read_csv(f'{TEST_LABELS}{self.video_id}-activespeaker.csv', header=None)
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
         labels_df = labels_df.replace('SPEAKING_AUDIBLE', 'SPEAKING')
         labels_df = labels_df.replace('SPEAKING_NOT_AUDIBLE', 'SPEAKING')
@@ -169,15 +163,13 @@ def convert_label_to_tensor(label):
 
     return label_tensors
 
-# Since file are returned in arbitary order we sort them by timestamp
+# Since files are returned in arbitary order when loading the folder using glob we sort them by timestamp
 # Credit: https://stackoverflow.com/questions/4813061/non-alphanumeric-list-order-from-os-listdir/48030307#48030307
 def sort_frames(path):
     frames = glob.glob(f"{path}/*.jpg")
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
     return sorted(frames, key=alphanum_key)
-
-
 
 def extract_labels(all_labels, current_labels, index):
     timestamp = float(current_labels['timestamp'][index])
