@@ -49,13 +49,15 @@ def general_face_evaluation(prediction, actual):
                 # Checks if bounding box for face detected is correct
                 # Then compares the predicted label with the actual label and returns the counts
                 if face_evaluate(prediction[j][3:7], a_faces[i]):
-                    correct += 1
+                    if percent_overlap(prediction[j][3:7], a_faces[i]) > 0.5:
+                        correct += 1
 
     # Evaluation for frames with single labels   
     else:
         for j in range(len(prediction)):
             if face_evaluate(prediction[j][3:7], a_faces):
-                correct += 1
+                if percent_overlap(prediction[j][3:7], a_faces) > 0.5:
+                    correct += 1
     
     return correct, total
 
@@ -106,6 +108,27 @@ def face_evaluate(prediction, actual):
     x1, y1, x2, y2 = prediction * 300
     a_x1, a_y1, a_x2, a_y2 = actual * 300
     return (x1 <= a_x2) and (x2 >= a_x1) and (y1 <= a_y2) and (y2 >= a_y1)
+
+
+def percent_overlap(prediction, actual):
+    x1, y1, x2, y2 = prediction * 300
+    a_x1, a_y1, a_x2, a_y2 = actual * 300
+    # Get area of each bounding box
+    # +1 used to avoid 0 values
+    predicted_area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    actual_area = (a_x2 - a_x1 + 1) * (a_y2 - a_y1 + 1)
+
+    # Get coordinates for the intersection box
+    m_x1 = max(x1, a_x1)
+    m_x2 = min(x2, a_x2)
+
+    m_y1 = max(y1, a_y1)
+    m_y2 = min(y2, a_y2)
+
+    # Calculate intersection and union areas to get IoU
+    inter = max(0, (m_x2 - m_x1 + 1)) * max(0, (m_y2 - m_y1 + 1))
+
+    return (inter / min(predicted_area, actual_area)) * 100
 
 # Function to compare the predicted label with the actual and update the metrics
 def label_eval(prediction, actual, counts):
