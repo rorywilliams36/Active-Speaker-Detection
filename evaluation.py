@@ -42,23 +42,23 @@ def general_face_evaluation(prediction, actual):
     if len(prediction) == 0:
         return 0, total
 
+    # Check prediciton has already linked to face
     # Evaluates if there is more than one label for the frame
     if len(a_faces.shape) > 1:
         for i in range(len(a_faces)):
             for j in range(len(prediction)):
                 # Checks if bounding box for face detected is correct
                 # Then compares the predicted label with the actual label and returns the counts
-                if face_evaluate(prediction[j][3:7], a_faces[i]):
-                    if percent_overlap(prediction[j][3:7], a_faces[i]) > 0.5:
-                        correct += 1
+                if face_evaluate(prediction[j][3:7], a_faces[i]) and check_centres(prediction[j][3:7], a_faces[i]):
+                    correct += 1
+                    break
 
     # Evaluation for frames with single labels   
     else:
         for j in range(len(prediction)):
             if face_evaluate(prediction[j][3:7], a_faces):
-                if percent_overlap(prediction[j][3:7], a_faces) > 0.5:
-                    correct += 1
-    
+                return 1, total
+
     return correct, total
 
 
@@ -91,12 +91,14 @@ def evaluate(prediction, actual):
                 # Then compares the predicted label with the actual label and returns the counts
                 if face_evaluate(p_faces[j], a_faces[i]):
                     tp, fp, tn, fn = label_eval(p_labels[j], a_label[i], [tp,fp,tn,fn])
+                    break
        
     # Evaluation for frames with single labels   
     else:
         for j in range(len(p_faces)):
             if face_evaluate(p_faces[j], a_faces):
                 tp, fp, tn, fn = label_eval(p_labels[j], a_label, [tp,fp,tn,fn])
+                break
 
     return tp, fp, tn, fn
 
