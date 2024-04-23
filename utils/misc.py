@@ -10,8 +10,8 @@ def get_face_coords(face, h, w):
         x1, y1, x2, y2 = face * h
 
     # Grabs extra pixels around bounding box to account for errors and also check ranges
-    x1 = max(round(float(x1))-5, 0)
-    y1 = max(round(float(y1))-5, 0)
+    x1 = min(max(round(float(x1))-5, 0), w)
+    y1 = min(max(round(float(y1))-5, 0), h)
     x2 = min(round(float(x2))+5, w)
     y2 = min(round(float(y2))+5, h)
     return x1, y1, x2, y2
