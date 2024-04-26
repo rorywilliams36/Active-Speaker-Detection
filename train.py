@@ -6,16 +6,19 @@ from torch.utils.data import Dataset, DataLoader
 from dataLoader import Train_Loader, Test_Loader, extract_labels
 from asd import ActiveSpeaker
 from model import SVM
+from temp import NN
 from evaluation import *
 from utils import tools
 
-train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg']
-test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'KHHgQ_Pe4cI']
+train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
+ '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
+ '0f39OWEqJ24']
+
+test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'KHHgQ_Pe4cI', 'BCiuXAuCKAU', 'C25wkwAMB-w']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--train', action='store_true', help="Perform training (True/False)")
-    parser.add_argument('--n_iter', type=int, required=False, default=100, help="Number of training iterations performed (Int)")
     parser.add_argument('--loss', action='store_true', help="Show loss function for model (Training must be selected)")
     parser.add_argument('--test', action='store_true', help="Perform testing")
     parser.add_argument('--evaluate',  action='store_true', required=False, help="Perform Evaluation")
@@ -34,11 +37,9 @@ def main():
         data['Label'] = np.array(data['Label']).flatten()
         X_train = np.array(data['Flow'])
         Y_train = data['Label'].astype(np.int64)
-        svm = SVM(False, None, args.n_iter)
+        svm = SVM(False, args.loadCustModel)
         model = svm.train(X_train, Y_train)
         svm.save_parameters(model)
-        print(model.best_estimator_)
-        print(model.best_params_)
 
         if args.loss:
             y = svm.test(X_train)
@@ -47,8 +48,7 @@ def main():
 
     if args.test:
         data = feature_extract(ids=test_ids, root_dir=args.testDataPath, train=False)
-        svm = SVM(args.loadPreviousModel, args.loadCustModel, args.n_iter)
-        print(data['Flow'])
+        svm = SVM(args.loadPreviousModel, args.loadCustModel)
         X = np.array(data['Flow'])
         y = svm.test(X)
 
@@ -75,9 +75,7 @@ def feature_extract(ids, root_dir, train):
                 actual_label = extract_labels(dataLoader.labels, labels, i)
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
                 prediction = asd.model()
-
-                prev_frames['Frame'] = images[i].numpy()
-                prev_frames['Faces'] = prediction['Faces']
+                prev_frames = update_prev_frames(prev_frames, images[i].numpy(), prediction['Faces'])
                 filtered = organise_data(prediction, actual_label)
 
                 if len(filtered['Flow']) > 0 or len(filtered['Label']) > 0:
@@ -88,6 +86,15 @@ def feature_extract(ids, root_dir, train):
         print(f'{video_id} done')
  
     return data
+
+def update_prev_frames(prev_frames, frame, faces):
+    if len(prev_frames['Frame']) >= 2:
+        _ = prev_frames['Frame'].pop()
+        _ = prev_frames['Faces'].pop()
+    prev_frames['Frame'].append(frame)
+    prev_frames['Faces'].append(faces)
+    return prev_frames
+
 
 def filter_faces(predicted_face, actual):
     '''
