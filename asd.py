@@ -35,16 +35,18 @@ class ActiveSpeaker():
         H = 64
         x1,y1,x2,y2 = get_face_coords(face, h, w)
 
-        # Extracts and resizes the face detected from the frame
-        face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
-        gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
+        if x1 <= w and y1 <= h and x2 <= w and y1 <= h:
+            # Extracts and resizes the face detected from the frame
 
-        # Apply dlib landmarks to face
-        points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
-        points = face_utils.shape_to_np(points)
+            face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
+            gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
-        if len(points) > 0:
-            flow_vector = self.dense_optic_flow(face, face_region)
+            # Apply dlib landmarks to face
+            points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
+            points = face_utils.shape_to_np(points)
+
+            if len(points) > 0:
+                flow_vector = self.dense_optic_flow(face, face_region)
 
         try:
             return flow_vector
@@ -54,55 +56,42 @@ class ActiveSpeaker():
     def dense_optic_flow(self, face, face_region):
         H = 64
         prev_face = None
+        flows_hori = []
+        flows_vert = []
+
         if len(self.prev_frames['Frame']) > 0:
-            x1, y1, x2, y2 = get_face_coords(face, 300, 300)
-            prev_frame = self.prev_frames['Frame']
-            prev_faces = self.prev_frames['Faces' ]
+            for i in range(len(self.prev_frames['Frame'])):
+                x1, y1, x2, y2 = get_face_coords(face, 300, 300)
+                prev_frame = self.prev_frames['Frame'][i]
+                prev_faces = self.prev_frames['Faces' ][i]
 
-            # Checks if the faces used are in the previous frames
-            if len(prev_faces) > 0:
-                for face in prev_faces:
-                    p_face = get_face_coords(face, 300, 300)
-                    # Change to percent bounding box overlapping
-                    if check_face([x1,y1,x2,y2], p_face):
-                        x1,y1,x2,y2 = p_face
-                        break
+                # Checks if the faces used are in the previous frames
+                if len(prev_faces) > 0:
+                    for face in prev_faces:
+                        p_face = get_face_coords(face, 300, 300)
+                        # Change to percent bounding box overlapping
+                        if check_face([x1,y1,x2,y2], p_face):
+                            x1,y1,x2,y2 = p_face
+                            break
 
-            # If no face is detected use the same coordinates from before
-            prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
+                # If no face is detected use the same coordinates from before
+                prev_face = cv2.resize(prev_frame[y1:y2, x1:x2], (H,H))
 
-            prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
-            current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
+                prev_face = cv2.cvtColor(prev_face, cv2.COLOR_BGR2GRAY)
+                current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
-            # Gets dense optic flow values
-            flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
-                                                winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
+                # Gets dense optic flow values
+                flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
+                                                    winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
 
-            # Gets and finds the average of the horizontal and vertical compoments of optic flow
-            flow_vertical = flow[..., 1]
-            flow_hori = flow[..., 0]
+                flow_vertical = flow[..., 1]
+                flow_hori = flow[..., 0]
+                flows_hori.append(flow_hori)
+                flows_vert.append(flow_vertical)
+            
             hori_mean = np.mean(flow_hori, axis=1)
             vert_mean = np.mean(flow_vertical, axis=0)
             flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
-
-            # tools.flow_img(flow, face_region, prev_face)       
-
-            ### Alternative Methods
-            # Gets magnitude and anglular values for the flow values
-            # mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
-
-            # Gets average magnitude and angular values per row from flow vector
-            # mag_mean1 = np.mean(mag, axis=1).flatten()
-            # ang_mean = np.mean(ang, axis=1).flatten()
-            # hori_vector = np.concatenate((mag_mean, ang_mean), axis=None)
-
-            # Gets vertical averages
-            # mag_mean2 = np.mean(mag, axis=0).flatten()
-            # ang_mean = np.mean(ang, axis=0).flatten()
-            # vert_vector = np.concatenate((mag_mean, ang_mean), axis=None)
-
-            # flow_vector = np.concatenate((hori_vector, vert_vector), axis=None)
-            # flow_vector = np.concatenate((mag_mean1, mag_mean2))
 
             return flow_vector
         return None
