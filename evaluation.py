@@ -2,7 +2,7 @@ import cv2, torch
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import PrecisionRecallDisplay, classification_report
+from sklearn.metrics import classification_report, confusion_matrix, roc_curve, RocCurveDisplay, auc
 
 from utils.misc import check_centres
 
@@ -175,15 +175,23 @@ def mean_avg_precision():
     pass
 
 # Calculates confusion matrix using seaborn
-def conf_matrix(tp,fp,tn,fn):
-    sns.heatmap([[tn, fp],[fn, tp]], cmap='crest', annot=True, fmt='.0f', 
-                xticklabels=['NOT_SPEAKING', 'SPEAKING'], yticklabels=['NOT_SEAKING', 'SPEAKING'])
-
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    plt.title('Confusion Matrix')
+def conf_matrix(Y_pred, Y_test):
+    matrix = confusion_matrix(Y_pred, Y_test, labels=[0, 1])
+    sns.heatmap(matrix, annot=True, fmt="g", cbar=True, cmap='crest', xticklabels=['Not-Speaking', 'Speaking'], yticklabels=['Not-Speaking', 'Speaking'])
+    plt.ylabel('Actual',fontsize=13)
+    plt.xlabel('Prediction',fontsize=13)
+    plt.title('Confusion Matrix (SVM classifier)')
     plt.show()
 
+def roc(X, Y, y_pred, model):
+    probs = model.predict_proba(X)
+    fpr, tpr, thresholds = roc_curve(Y, model.decision_function(X))
+    score = auc(fpr, tpr)
+    roc = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=score)
+    print(score)
+    roc.plot()
+    plt.show()
+    print(probs)
 
 # Function to print results
 def display_results(title, counts, p, r, f):
