@@ -5,8 +5,9 @@ from torch.utils.data import Dataset, DataLoader
 
 from dataLoader import Train_Loader, Test_Loader, extract_labels
 from asd import ActiveSpeaker
-from model import SVM
-from temp import NN
+from models.model import SVM
+from models.temp import NN
+from models.temp2 import *
 from evaluation import *
 from utils import tools
 
@@ -14,14 +15,17 @@ train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66
  '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
  '0f39OWEqJ24']
 
+# train_ids = ['_mAfwH6i90E']
 test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'KHHgQ_Pe4cI', 'BCiuXAuCKAU', 'C25wkwAMB-w']
+test_ids = ['C25wkwAMB-w']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--train', action='store_true', help="Perform training (True/False)")
     parser.add_argument('--loss', action='store_true', help="Show loss function for model (Training must be selected)")
     parser.add_argument('--test', action='store_true', help="Perform testing")
-    parser.add_argument('--evaluate',  action='store_true', required=False, help="Perform Evaluation")
+    parser.add_argument('--confMatrix', action='store_true',  required=False, help="Plot Confusion Matrix from testing")
+    parser.add_argument('--roc', action='store_true',  required=False, help="Plot ROC curve from testing")
     parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training dataset")
     parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing dataset")
     parser.add_argument('--trainFlowVector', type=str, default=None, required=False, help='Data path to csv file containing flow values and labels for training')
@@ -34,12 +38,17 @@ def main():
 
     if args.train:
         data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True)
-        data['Label'] = np.array(data['Label']).flatten()
+        data['Label'] = np.array(data['Label']).flatten().astype(np.int64)
         X_train = np.array(data['Flow'])
-        Y_train = data['Label'].astype(np.int64)
+        Y_train = data['Label']
+        print(X_train.shape)
+        print(Y_train.shape)
+
+        # train(data)
         svm = SVM(False, args.loadCustModel)
         model = svm.train(X_train, Y_train)
         svm.save_parameters(model)
+
 
         if args.loss:
             y = svm.test(X_train)
@@ -51,14 +60,18 @@ def main():
         svm = SVM(args.loadPreviousModel, args.loadCustModel)
         X = np.array(data['Flow'])
         y = svm.test(X)
+        print(svm.model.best_params_)
+        data['Label'] = np.array(data['Label']).flatten()
+        test_y = data['Label'].astype(np.int64)
+        print(svm.evaluate(y, test_y))
+        if args.confMatrix:
+            conf_matrix(y, test_y)
 
-        if args.evaluate:
-            data['Label'] = np.array(data['Label']).flatten()
-            test_y = data['Label'].astype(np.int64)
-            print(svm.evaluate(y, test_y))
+        if args.roc:
+            roc(X, test_y, y, svm.model)
 
 def feature_extract(ids, root_dir, train):
-    data = {'Flow' : [], 'Label' : []}
+    data = {'Id' : [], 'Timestamp': [], 'Flow' : [], 'Label' : []}
 
     print('Extracting features\n')
     for video_id in ids:
@@ -82,15 +95,17 @@ def feature_extract(ids, root_dir, train):
                     for i in range(len(filtered['Flow'])):
                         data['Flow'].append(filtered['Flow'][i])
                         data['Label'].append(filtered['Label'][i])
+                        data['Timestamp'].append(filtered['Timestamp'])
+                        data['Id'].append(video_id)
 
         print(f'{video_id} done')
  
     return data
 
 def update_prev_frames(prev_frames, frame, faces):
-    if len(prev_frames['Frame']) >= 2:
-        _ = prev_frames['Frame'].pop()
-        _ = prev_frames['Faces'].pop()
+    if len(prev_frames['Frame']) >= 5:
+        _ = prev_frames['Frame'].pop(0)
+        _ = prev_frames['Faces'].pop(0)
     prev_frames['Frame'].append(frame)
     prev_frames['Faces'].append(faces)
     return prev_frames
@@ -124,7 +139,7 @@ def filter_faces(predicted_face, actual):
         return None
             
     if face_evaluate(predicted_face, a_faces) and check_centres(predicted_face, a_faces):
-        return True
+        return 0
     return None
                 
 def organise_data(prediction, actual):
@@ -139,7 +154,6 @@ def organise_data(prediction, actual):
     returns: 
         vector: dict containing flow values with corresponding label
     '''
-    vector = {'Flow' : [], 'Label' : []}
     flow = []
     labels = []
     if torch.is_tensor(actual[-1]):
@@ -154,11 +168,10 @@ def organise_data(prediction, actual):
             flow.append(prediction['Flow'][i])
             if len(actual[1].shape) > 1:
                 labels.append(label[c])
-
             else:
                 labels.append(label)
 
-    return {'Flow' : flow, 'Label' : labels}
+    return {'Timestamp' : actual[0], 'Flow' : flow, 'Label' : labels}
 
 if __name__ == "__main__":
     main()
