@@ -22,6 +22,7 @@ class ActiveSpeaker():
         img_diff = []
 
         predicted = {'Faces' : [], 'Flow' : [], 'Label' : []}
+
         for face in faces:
             flow_vector = self.feature_detection(face)    
             predicted['Faces'].append(face[3:7])
@@ -32,7 +33,7 @@ class ActiveSpeaker():
     # Gets lips using dlib shape predictor model
     def feature_detection(self, face):
         h, w = self.frame.shape[:2]
-        H = 64
+        H = 128
         x1,y1,x2,y2 = get_face_coords(face, h, w)
 
         if x1 <= w and y1 <= h and x2 <= w and y1 <= h:
@@ -47,20 +48,26 @@ class ActiveSpeaker():
 
             if len(points) > 0:
                 flow_vector = self.dense_optic_flow(face, face_region)
+                # flow_vector = self.feature_vector(face, face_region)
 
         try:
             return flow_vector
         except:
             return None
 
+
     def dense_optic_flow(self, face, face_region):
-        H = 64
+        H = 128
         prev_face = None
         flows_hori = []
         flows_vert = []
+        rates = [1, 0.7, 0.5, 0.2, 0.1]
+        all_flows = []
 
-        if len(self.prev_frames['Frame']) > 0:
-            for i in range(len(self.prev_frames['Frame'])):
+        num_previous = len(self.prev_frames['Frame'])
+        if num_previous > 0:
+            rate_index = num_previous-1
+            for i in range(num_previous):
                 x1, y1, x2, y2 = get_face_coords(face, 300, 300)
                 prev_frame = self.prev_frames['Frame'][i]
                 prev_faces = self.prev_frames['Faces' ][i]
@@ -84,14 +91,18 @@ class ActiveSpeaker():
                 flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
                                                     winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
 
+
+                all_flows.append(flow)
                 flow_vertical = flow[..., 1]
                 flow_hori = flow[..., 0]
                 flows_hori.append(flow_hori)
                 flows_vert.append(flow_vertical)
-            
-            hori_mean = np.mean(flow_hori, axis=1)
-            vert_mean = np.mean(flow_vertical, axis=0)
-            flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
 
-            return flow_vector
+
+            mean_flow = np.mean(all_flows, axis=0)
+            
+            # hori_mean = np.mean(flow_hori, axis=1)
+            # vert_mean = np.mean(flow_vertical, axis=0)
+            # flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)           
+            return mean_flow
         return None
