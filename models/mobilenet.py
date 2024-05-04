@@ -1,5 +1,5 @@
 '''
-Modified MobileNet to be used with optical flow vector 128x128x2
+Modified MobileNet to be used with optical flow vector 128x128x2 and binary classification
 Original Source Code: https://github.com/pytorch/vision/blob/main/torchvision/models/mobilenetv3.py
 '''
 
@@ -22,10 +22,12 @@ class MobileNet(nn.Module):
         super().__init__()
         self.mobilenet = mobilenet_v3_small(weights=None)
 
-        # Modify MobileNet to use with 128x128x2 vector
-        # Change input channels to 2 and classes to 1
-        # Change last activation to sigmoid for binary classification
+        # Modify input of the first layer of MobileNet to use with 128x128x2 vector
+        # Change input channels to 2 (only thing that changes is the input channels)
         self.mobilenet.features[0][0] = nn.Conv2d(in_channels, 16, kernel_size=3, stride=2, padding=1, bias=True)
+
+        # Modify the last MobileNet layer 'classifier'
+        # Change last activation to sigmoid for binary classification
         self.mobilenet.classifier = nn.Sequential(
             nn.Linear(self.mobilenet.classifier[0].in_features, num_classes),
             nn.Sigmoid()
@@ -36,14 +38,14 @@ class MobileNet(nn.Module):
 
 
 
-def train_model(data):
+def train_mobile(data):
     dataLoader = Vector_Loader(data)
     train_loader = DataLoader(dataLoader, batch_size=64, num_workers=0, shuffle=False)
 
     model = MobileNet()
     criterion = nn.BCELoss()
 
-    # training using gradient descent and back propagation
+    # training using stochastic gradient descent and back propagation
     optimizer = optim.SGD(model.parameters(), lr=0.003, momentum=0.9)
     epochs = 50
     print("\nTraining")
@@ -69,25 +71,22 @@ def train_model(data):
 
 
 
-def test_model(data):
+def test_mobile(data):
     dataLoader = Test_Vector_Loader(data)
     test_loader = DataLoader(dataLoader, batch_size=64, num_workers=0, shuffle=False)
 
     model = MobileNet()
     model.load_state_dict(torch.load(PATH))
     model.eval()
-    # training using gradient descent and back propagation
+
     preds = np.array([])
     with torch.no_grad():
         for vector in test_loader:
             y_pred = model(vector).squeeze()
-            # predictions.append(y_pred)
-
             y_pred = y_pred.numpy()
             preds = np.concatenate((preds, y_pred), axis=None)
         print(preds)
 
-    # print(preds)
     for i in range(len(preds)):
         if preds[i] > 0.075:
             preds[i] = 1
