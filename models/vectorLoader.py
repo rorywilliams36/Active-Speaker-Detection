@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from utils import tools
 
+
 class Vector_Loader(Dataset):
     def __init__(self, data):
         self.data = data
@@ -25,7 +26,7 @@ class Vector_Loader(Dataset):
 
 class Test_Vector_Loader(Dataset):
     def __init__(self, data):
-        self.data = data
+        Vector_Loader.__init__(self, data)
 
     def __len__(self):
         return len(self.data)

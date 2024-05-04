@@ -16,6 +16,7 @@ import torch.optim as optim
 from models.vectorLoader import Vector_Loader, Test_Vector_Loader
 
 PATH = 'mobilenet_model.pth'
+THRESHOLD = 0.3
 
 class MobileNet(nn.Module):
     def __init__(self, num_classes: int = 1, in_channels: int = 2):
@@ -88,7 +89,7 @@ def test_mobile(data):
         print(preds)
 
     for i in range(len(preds)):
-        if preds[i] > 0.075:
+        if preds[i] > THRESHOLD:
             preds[i] = 1
         else:
             preds[i] = 0
