@@ -60,7 +60,6 @@ def main():
             model = ShuffleNet()
             train_model(data, model, 'shufflenet_model.pth', args.epoch, args.lr)
 
-
     # Testing
     if args.test:
         # Feature Extraction
@@ -93,14 +92,14 @@ def main():
             conf_matrix(predictions, test_y)
 
         if args.roc:
-            roc(X, test_y, y, svm.model)
+            roc(X, test_y, predictions, svm.model)
 
 def feature_extract(ids, root_dir, train):
     '''
     Feature Extraction
     Loads all frames an acquires the relevant features and stores in dictionary
 
-    Params:
+    Args:
         ids: Array of video ids to be loaded
         root_dir: Path of dataset (training or testing)
         train: boolean indicating training/testing
@@ -165,7 +164,7 @@ def filter_faces(predicted_face, actual):
     '''
     Function to remove faces which have been detected but aren't in the actual labels for the frame
     
-    params:
+    Args:
         predicted_face: array containing coordinates for bounding box
         actual: array/tensor of labels for the frame
     
@@ -196,7 +195,7 @@ def organise_data(prediction, actual):
     '''
     Function to organise the flow vectors with corresponding labels
 
-    params:
+    Args:
         prediction: dict containing the predicted face and label
         actual: dict containing the actual label for the frame
         train: boolean indicating training or testing
