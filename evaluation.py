@@ -176,16 +176,17 @@ def mean_avg_precision():
 
 # Calculates confusion matrix using seaborn
 def conf_matrix(Y_pred, Y_test):
-    matrix = confusion_matrix(Y_pred, Y_test, labels=[0, 1])
+    matrix = confusion_matrix(Y_test, Y_pred, labels=[0, 1])
+    print(matrix)
     sns.heatmap(matrix, annot=True, fmt="g", cbar=True, cmap='crest', xticklabels=['Not-Speaking', 'Speaking'], yticklabels=['Not-Speaking', 'Speaking'])
-    plt.ylabel('Actual',fontsize=13)
     plt.xlabel('Prediction',fontsize=13)
+    plt.ylabel('Actual',fontsize=13)
     plt.title('Confusion Matrix (SVM classifier)')
     plt.show()
 
 def roc(X, Y, y_pred, model):
     probs = model.predict_proba(X)
-    fpr, tpr, thresholds = roc_curve(Y, model.decision_function(X))
+    fpr, tpr, thresholds = roc_curve(Y, model.decision_function(X), pos_label=1)
     score = auc(fpr, tpr)
     roc = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=score)
     print(score)
