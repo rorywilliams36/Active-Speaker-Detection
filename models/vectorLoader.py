@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 from utils import tools
 
-
+# Functions to load data from the dictionary containing the feature vectors into the models for classification
+# Follows the general plan for PyTorch's custom dataloaders
 class Vector_Loader(Dataset):
     def __init__(self, data):
         self.data = data

@@ -9,6 +9,17 @@ from models.vectorLoader import Vector_Loader, Test_Vector_Loader
 
 
 def train_model(data, model, save_path, epoch: int = 50, lr: float = 0.001):
+    '''
+    Function to train model to classify feature vectors
+
+    Args:
+        data: dictionary containing feature vectors and labels
+        model: PyTorch object either MobileNetV3 Small or ShuffleNetV2
+        save_path: Path to file to save model parameters
+        epoch: Number of epochs to train for 
+        lr: Learning Rate for training
+    '''
+
     dataLoader = Vector_Loader(data)
     train_loader = DataLoader(dataLoader, batch_size=64, num_workers=0, shuffle=False)
 
@@ -38,6 +49,18 @@ def train_model(data, model, save_path, epoch: int = 50, lr: float = 0.001):
 
 
 def test_model(data, model, load_path, threshold: float = 0.3):
+    '''
+    Function to test model
+
+    Args:
+        data: dictionary containing feature vectors
+        model: PyTorch object either MobileNetV3 Small or ShuffleNetV2
+        load_path: Path ot file containing model parameters
+        threshold: threshold value to append labels using predicted probabilites
+
+    Returns:
+        preds: array of predicted labels (0,1)
+    '''
     dataLoader = Test_Vector_Loader(data)
     test_loader = DataLoader(dataLoader, batch_size=64, num_workers=0, shuffle=False)
 
