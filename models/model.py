@@ -4,30 +4,17 @@ import numpy as np
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import log_loss, hinge_loss, PrecisionRecallDisplay, classification_report
+from sklearn.pipeline import make_pipeline
 
 from scipy.stats import expon
 
 class SVM():
-    def __init__(self, load, model_path):
+    def __init__(self, load):
         # If training skips to last clause, for testing a pre-saved model is used
         if load:
             self.model = self.load_parameters(None)
-        elif model_path is not None:
-            self.model = self.load_parameters(model_path)
         else:
-            nus = [0.38, 0.39,0.3975, 0.399, 0.42,0.45]
-            gammas = [0.02925, 0.0295, 0.035, 0.04, 0.05, 'auto']
-            # Gets random values for gamma and nu based on the exponential distribution in the range (0-1)
-            # param_grid = {'gamma' : expon(scale=.1), 'nu' : expon(scale=.1), 'kernel' : ['rbf'], 
-            # 'class_weight' : [{0:0.7, 1:0.3}, {0:0.75, 1:0.25}],'probability' : [True]}
-            # self.model = RandomizedSearchCV(svm.NuSVC(), param_distributions=param_grid, n_iter=50, refit=True, verbose=3)
-
-            param_grid = {'gamma' : gammas, 'nu' : nus, 'kernel' : ['rbf'], 
-            'class_weight' : [{0:0.7, 1:0.3}], 'probability' : [True]}
-            self.model = GridSearchCV(svm.NuSVC(), param_grid, refit=True, verbose=3)
-
-            # ### Best found:
-            # self.model = svm.NuSVC(gamma=0.035, nu=0.3975, class_weight = {0:0.7, 1:0.3}, probability=True)
+            self.model = svm.NuSVC(gamma=0.02925, nu=0.3875, class_weight={0:0.7, 1:0.3}, probability=True)
 
     # Trains model
     def train(self, X, Y):
@@ -46,15 +33,6 @@ class SVM():
         print('Testing')
         Y = self.model.predict(X)
         return Y
-
-    def loss(self, X, y):
-        pred_decision = self.model.decision_function(X)
-        hinge = hinge_loss(y, pred_decision)
-
-        # pred_probs = self.model.predict_proba(X)
-        # lg_loss = log_loss(y, pred_probs)
-        # print(f'Log: {lg_loss}')
-        return hinge
 
     def evaluate(self, pred_y, test_y):
         return classification_report(pred_y, test_y)
