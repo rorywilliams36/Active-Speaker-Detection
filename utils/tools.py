@@ -173,3 +173,30 @@ def flow_img(flow, face_region, prev_face):
     plt.imshow(flow_img)
 
     plt.show()
+
+def plot_loss(loss, epochs):
+    epoch_list = [i for i in range(epochs)]
+    plt.plot(epoch_list, loss)
+    plt.title('Loss Function')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.show() 
+
+
+def plot_cross_validation(train_loss, val_loss, epochs):
+    epoch_list = [i for i in range(epochs)]
+    plt.plot(epoch_list, train_loss, label='Train Loss')
+    plt.plot(epoch_list, val_loss, label='Validation Loss')
+    plt.title('Loss Function')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show() 
+
+def plot_valid_acc(val_acc, epochs):
+    epoch_list = [i for i in range(epochs)]
+    plt.plot(epoch_list, val_acc)
+    plt.title('Validation Accuracy across Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy %')
+    plt.show() 
