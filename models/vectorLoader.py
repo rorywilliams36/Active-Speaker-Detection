@@ -1,12 +1,9 @@
 
-import os, cv2, torch
+import torch
 import pandas as pd
 import numpy as np 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-import matplotlib.pyplot as plt
-
-from utils import tools
 
 # Functions to load data from the dictionary containing the feature vectors into the models for classification
 # Follows the general plan for PyTorch's custom dataloaders
@@ -15,11 +12,12 @@ class Vector_Loader(Dataset):
         self.data = data
 
     def __len__(self):
-        return len(self.data['Label'])
+        return len(self.data['Flow'])
 
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
+
         vector = torch.from_numpy(self.data['Flow'][index])
         label = self.data['Label'][index]
         vector = vector.permute(2, 0, 1)
@@ -35,6 +33,7 @@ class Test_Vector_Loader(Dataset):
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
+
         vector = torch.from_numpy(self.data[index])
         vector = vector.permute(2, 0, 1)
         return vector
