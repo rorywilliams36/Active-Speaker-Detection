@@ -2,27 +2,29 @@ import os, argparse, cv2
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report
 
 from dataLoader import Train_Loader, Test_Loader, extract_labels
 from asd import ActiveSpeaker
 from models.support_vec import SVM
 from models.mobilenet import MobileNet
 from models.shuffle import ShuffleNet
-from models.train_vectors import train_model, test_model
+from models.train_vectors import train_model, train_validation, test_model
 
 from evaluation import *
 from utils import tools
-from sklearn.metrics import classification_report
 
 train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
- '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
- '0f39OWEqJ24']
+'20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
+'0f39OWEqJ24']
 
 test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']
 
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
-    parser.add_argument('--train', action='store_true', help="Perform training (True/False)")
+    parser.add_argument('--train', action='store_true', help="Perform training")
+    parser.add_argument('--validate', action='store_true', help='Train with Cross-Validation')
     parser.add_argument('--test', action='store_true', help="Perform testing")
     parser.add_argument('--confMatrix', action='store_true',  required=False, help="Plot Confusion Matrix from testing")
     parser.add_argument('--roc', action='store_true',  required=False, help="Plot ROC curve from testing")
@@ -34,12 +36,14 @@ def main():
     parser.add_argument('--MobileNet', action='store_true', required=False, help='Selects MobileNetV3 Small to be used as classifer')
     parser.add_argument('--ShuffleNet', action='store_true', required=False, help='Selects ShuffleNetV2 to be used as classifer')
     parser.add_argument('--epochs', type=int, default=50, required=False, help='Select the number of epochs to train for (int)')
-    parser.add_argument('--lr', type=float, default=0.001, required=False, help='Select the learing rate for training (float)')
+    parser.add_argument('--lr', type=float, default=0.003, required=False, help='Select the learing rate for training (float)')
+    parser.add_argument('--Loss', action='store_true', required=False, help='Plots loss graph')
+    parser.add_argument('--valLoss', action='store_true', required=False, help='Plots validation and training loss graph')
 
     args = parser.parse_args()
 
     # Training
-    if args.train:
+    if args.train or args.validate:
         # Get features and store them in dictionary
         data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True)
         data['Label'] = np.array(data['Label']).flatten().astype(np.int64)
@@ -54,11 +58,21 @@ def main():
 
         if args.MobileNet:
             model = MobileNet()
-            train_model(data, model, 'mobilenet_model.pth', args.epoch, args.lr)
+            if args.validate:
+                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, 'mobilenet_model.pth', args.epochs, args.lr)
+                if args.valLoss:
+                    tools.plot_cross_validation(train_loss, valid_loss, args.epochs)
+                    tools.plot_valid_acc(valid_accuracies, args.epochs)
+            else:
+                pred_probs, loss = train_model(data, model, 'mobilenet_model.pth', args.epochs, args.lr)
             
         if args.ShuffleNet:
             model = ShuffleNet()
-            train_model(data, model, 'shufflenet_model.pth', args.epoch, args.lr)
+            pred_probs, loss = train_model(data, model, 'shufflenet_model.pth', args.epochs, args.lr)
+
+        if (args.ShuffleNet or args.MobileNet) and args.Loss:
+            tools.plot_loss(loss, args.epochs)
+
 
     # Testing
     if args.test:
@@ -75,11 +89,11 @@ def main():
 
         if args.MobileNet:
             model = MobileNet()
-            predictions = test_model(data, load_path='mobilenet_model.pth')
+            predictions, pred_probs = test_model(data['Flow'], model, load_path='mobilenet_model.pth')
 
         if args.ShuffleNet:
             model = ShuffleNet()
-            predictions = test_model(data, load_path='shufflenet_model.pth')
+            predictions, pred_probs = test_model(data['Flow'], model, load_path='shufflenet_model.pth')
         
         # Print Evaluations
         data['Pred'] = predictions
@@ -92,7 +106,13 @@ def main():
             conf_matrix(predictions, test_y)
 
         if args.roc:
-            roc(X, test_y, predictions, svm.model)
+            if args.SVM:
+                svm_roc(X, test_y, predictions, svm.model)
+
+            if args.MobileNet or args.ShuffleNet:
+                roc(X, test_y, pred_probs)
+
+        
 
 def feature_extract(ids, root_dir, train):
     '''
