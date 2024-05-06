@@ -184,15 +184,20 @@ def conf_matrix(Y_pred, Y_test):
     plt.title('Confusion Matrix (SVM classifier)')
     plt.show()
 
-def roc(X, Y, y_pred, model):
+def svm_roc(X, Y, y_pred, model):
     probs = model.predict_proba(X)
     fpr, tpr, thresholds = roc_curve(Y, model.decision_function(X), pos_label=1)
     score = auc(fpr, tpr)
     roc = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=score)
-    print(score)
     roc.plot()
     plt.show()
-    print(probs)
+
+def roc(X, Y, y_pred):
+    fpr, tpr, thresholds = roc_curve(Y, y_pred, pos_label=1)
+    score = auc(fpr, tpr)
+    roc = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=score)
+    roc.plot()
+    plt.show()
 
 # Function to print results
 def display_results(title, counts, p, r, f):
