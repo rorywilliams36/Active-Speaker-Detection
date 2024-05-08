@@ -1,6 +1,7 @@
 import os, argparse, cv2
 import pandas as pd
 import numpy as np
+from torch import nn
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
@@ -35,6 +36,8 @@ def main():
     parser.add_argument('--SVM', action='store_true', required=False, help='Selects Support Vector Machine to be used as classifer')
     parser.add_argument('--MobileNet', action='store_true', required=False, help='Selects MobileNetV3 Small to be used as classifer')
     parser.add_argument('--ShuffleNet', action='store_true', required=False, help='Selects ShuffleNetV2 to be used as classifer')
+    parser.add_argument('--mobileThresh', type=float, default=0.25, required=False, help='Threshold value for MobileNet classification')
+    parser.add_argument('--shuffleThresh', type=float, default=0.12, required=False, help='Threshold value for ShuffleNet classification')
     parser.add_argument('--epochs', type=int, default=50, required=False, help='Select the number of epochs to train for (int)')
     parser.add_argument('--lr', type=float, default=0.003, required=False, help='Select the learing rate for training (float)')
     parser.add_argument('--Loss', action='store_true', required=False, help='Plots loss graph')
@@ -59,7 +62,7 @@ def main():
         if args.MobileNet:
             model = MobileNet()
             if args.validate:
-                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, 'mobilenet_model.pth', args.epochs, args.lr)
+                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, 'mobilenet_model.pth', args.epochs, args.lr, threshold=args.mobileThresh)
                 if args.valLoss:
                     tools.plot_cross_validation(train_loss, valid_loss, args.epochs)
                     tools.plot_valid_acc(valid_accuracies, args.epochs)
@@ -68,7 +71,14 @@ def main():
             
         if args.ShuffleNet:
             model = ShuffleNet()
-            pred_probs, loss = train_model(data, model, 'shufflenet_model.pth', args.epochs, args.lr)
+            if args.validate:
+                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, 'shufflenet_model.pth', args.epochs, args.lr, threshold=args.shuffleThresh)
+                if args.valLoss:
+                    tools.plot_cross_validation(train_loss, valid_loss, args.epochs)
+                    tools.plot_valid_acc(valid_accuracies, args.epochs)
+            else:
+                pred_probs, loss = train_model(data, model, 'shufflenet_model.pth', args.epochs, args.lr)
+
 
         if (args.ShuffleNet or args.MobileNet) and args.Loss:
             tools.plot_loss(loss, args.epochs)
@@ -89,11 +99,11 @@ def main():
 
         if args.MobileNet:
             model = MobileNet()
-            predictions, pred_probs = test_model(data['Flow'], model, load_path='mobilenet_model.pth')
+            predictions, pred_probs = test_model(data['Flow'], model, load_path='mobilenet_model.pth', threshold=args.mobileThresh)
 
         if args.ShuffleNet:
             model = ShuffleNet()
-            predictions, pred_probs = test_model(data['Flow'], model, load_path='shufflenet_model.pth')
+            predictions, pred_probs = test_model(data['Flow'], model, load_path='shufflenet_model.pth', threshold=args.shuffleThresh)
         
         # Print Evaluations
         data['Pred'] = predictions
