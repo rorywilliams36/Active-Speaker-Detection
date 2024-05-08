@@ -46,7 +46,7 @@ def train_model(data, model, save_path, epochs: int = 50, lr: float = 0.003):
         print(f'Epoch {e}: {epoch_loss:.4f} loss')
 
     try:
-        #torch.save(model.state_dict(), save_path)
+        torch.save(model.state_dict(), save_path)
         print('Model Saved')
     except:
         print('Error occured when saving model')
@@ -54,12 +54,11 @@ def train_model(data, model, save_path, epochs: int = 50, lr: float = 0.003):
     return predicted_probs, losses
 
 
-def train_validation(data, model, save_path, epochs: int=50, lr: float = 0.003):
-    data_size = len(data['Flow'])*0.2
+def train_validation(data, model, save_path, epochs: int=50, lr: float = 0.003, threshold: float = 0.25):
+    data_size = int(round(len(data['Flow'])*0.2))-1
     valid_data = {'Flow' : [], 'Label' : []}
     valid_data['Flow'] = data['Flow'][-data_size:]
     valid_data['Label'] = data['Label'][-data_size:]
-    print(len(data['Flow']))
     del data['Flow'][-data_size:]
     del list(data['Label'])[-data_size:]
 
@@ -106,7 +105,7 @@ def train_validation(data, model, save_path, epochs: int=50, lr: float = 0.003):
                 valid_loss += loss.item() * vector.size(0)
                 preds = np.concatenate((preds, pred_y.numpy()), axis=None)
 
-            valid_epoch_loss = valid_loss / 500
+            valid_epoch_loss = valid_loss / valid_dataLoader.__len__()
             val_losses.append(valid_epoch_loss)
 
             pred_labels = []
@@ -142,7 +141,7 @@ def train_validation(data, model, save_path, epochs: int=50, lr: float = 0.003):
         val_accuaracies.append(acc)
 
     try:
-        torch.save(model.state_dict(), save_path)
+        # torch.save(model.state_dict(), save_path)
         print('Model Saved')
     except:
         print('Error occured when saving model')

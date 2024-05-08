@@ -23,7 +23,7 @@ def split_into_frames(video_id, test):
     labels.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
 
     output = f'/dataset/{video_id}'
-    cap = cv2.VideoCapture(f'{current_path}/dataset/{video_id}.mp4')
+    cap = cv2.VideoCapture(f'{current_path}/dataset/{video_id}.mkv')
 
     start = labels.at[0, 'Timestamp'] - 0.04
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -34,7 +34,7 @@ def split_into_frames(video_id, test):
 
     frame_count = 0
     count = 0
-    stop = 500
+    stop = 60
     while True and count < stop:
         ret, frame = cap.read()
         timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)	
@@ -44,7 +44,7 @@ def split_into_frames(video_id, test):
         # Converts milliseconds to seconds ot match the timestamps in the labels
             norm_time = round((timestamp / 1000), 2)
             # Only gets frames with a corresponding label
-            if norm_time >= 900 and count <= stop:
+            if norm_time >= 1242 and count <= stop:
                 for i in range(len(labels)):
                     label_timestamp = labels.at[i, "Timestamp"]
                     if frame_count % skip == 0:                    
@@ -97,9 +97,4 @@ def get_frame_rate(video_id):
     return fps
 
 if __name__ == "__main__":
-    # ids = [ '_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g', '20TAGRElvfE', '2fwni_Kjf2M', Db19rWN5BGo] , N0Dt9i9IUNg], rFgb2ECMcrY 8aMv-ZGD4ic
-    # test = HV0H6oc4Kvs KHHgQ_Pe4cI
-    split_into_frames('1j20qq1JyX4', True)
-    # for i in ids:
-    #     print(i, get_frame_rate(i))
-    # download_files(f'{URL}/{train_files[0]}', 'B1MAUxpKaV8')dataset/train/rFgb2ECMcrY
+    split_into_frames('HV0H6oc4Kvs', True)

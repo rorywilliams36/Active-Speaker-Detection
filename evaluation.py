@@ -181,7 +181,7 @@ def conf_matrix(Y_pred, Y_test):
     sns.heatmap(matrix, annot=True, fmt="g", cbar=True, cmap='crest', xticklabels=['Not-Speaking', 'Speaking'], yticklabels=['Not-Speaking', 'Speaking'])
     plt.xlabel('Prediction',fontsize=13)
     plt.ylabel('Actual',fontsize=13)
-    plt.title('Confusion Matrix (SVM classifier)')
+    plt.title('Confusion Matrix')
     plt.show()
 
 def svm_roc(X, Y, y_pred, model):

@@ -11,7 +11,6 @@ from torchvision import transforms
 from torchvision.models import shufflenet_v2_x0_5
 import torch.optim as optim
 
-
 class ShuffleNet(nn.Module):
     def __init__(self, num_classes: int = 1, in_channels: int = 2):
         super().__init__()

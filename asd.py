@@ -1,9 +1,8 @@
 import cv2, dlib
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-
 from imutils import face_utils
+
 from faceDetection.faceDetector import FaceDetection
 from utils import tools
 from utils.misc import *
@@ -12,9 +11,10 @@ landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
     def __init__(self, frame,
-                prev_frames: dict = {'Frame' : [], 'Faces' : []}):
+                prev_frames: dict = {'Frame' : [], 'Faces' : []}, svm: bool = False):
         self.frame = frame.numpy()
         self.prev_frames = prev_frames
+        self.svm = svm
 
     def model(self):
         '''
@@ -85,7 +85,7 @@ class ActiveSpeaker():
         Return:
             mean_flow: Array of mean flow computed from the previous frames/faces
         '''
-        
+
         H = 128
         prev_face = None
         flows_hori = []
@@ -127,13 +127,14 @@ class ActiveSpeaker():
                 flows_hori.append(flow_hori)
                 flows_vert.append(flow_vertical)
 
-
-            mean_flow = np.mean(all_flows, axis=0)
             
-            # SVM:
-            # hori_mean = np.mean(flow_hori, axis=1)
-            # vert_mean = np.mean(flow_vertical, axis=0)
-            # flow_vector = np.concatenate((hori_mean, vert_mean), axis=None)
+            if self.svm:
+                hori_mean = np.mean(flow_hori, axis=1)
+                vert_mean = np.mean(flow_vertical, axis=0)
+                mean_flow = np.concatenate((hori_mean, vert_mean), axis=None)
+
+            else:
+                mean_flow = np.mean(all_flows, axis=0)
                        
             return mean_flow
         return None

@@ -22,6 +22,8 @@ train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66
 
 test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']
 
+obst_ids = ['4ZpjKfu6Cl8', 'HV0H6oc4Kvs', '1j20qq1JyX4', 'KHHgQ_Pe4cI', 'BCiuXAuCKAU']
+
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--train', action='store_true', help="Perform training")
@@ -48,7 +50,7 @@ def main():
     # Training
     if args.train or args.validate:
         # Get features and store them in dictionary
-        data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True)
+        data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True, svm_check=args.SVM)
         data['Label'] = np.array(data['Label']).flatten().astype(np.int64)
         X_train = np.array(data['Flow'])
         Y_train = data['Label']
@@ -87,7 +89,7 @@ def main():
     # Testing
     if args.test:
         # Feature Extraction
-        data = feature_extract(ids=test_ids, root_dir=args.testDataPath, train=False)
+        data = feature_extract(ids=test_ids, root_dir=args.testDataPath, train=False, svm_check=args.SVM)
         X = np.array(data['Flow'])
         data['Label'] = np.array(data['Label']).flatten()
         test_y = data['Label'].astype(np.int64)
@@ -100,7 +102,7 @@ def main():
         if args.MobileNet:
             model = MobileNet()
             predictions, pred_probs = test_model(data['Flow'], model, load_path='mobilenet_model.pth', threshold=args.mobileThresh)
-
+            
         if args.ShuffleNet:
             model = ShuffleNet()
             predictions, pred_probs = test_model(data['Flow'], model, load_path='shufflenet_model.pth', threshold=args.shuffleThresh)
@@ -124,7 +126,7 @@ def main():
 
         
 
-def feature_extract(ids, root_dir, train):
+def feature_extract(ids, root_dir, train, svm_check):
     '''
     Feature Extraction
     Loads all frames an acquires the relevant features and stores in dictionary
@@ -159,7 +161,7 @@ def feature_extract(ids, root_dir, train):
                 actual_label = extract_labels(dataLoader.labels, labels, i)
                 # Feature Extraction
                 # Stores features in dict
-                asd = ActiveSpeaker(images[i], prev_frames=prev_frames)
+                asd = ActiveSpeaker(images[i], prev_frames=prev_frames, svm=svm_check)
                 prediction = asd.model()
                 prev_frames = update_prev_frames(prev_frames, images[i].numpy(), prediction['Faces'])
 

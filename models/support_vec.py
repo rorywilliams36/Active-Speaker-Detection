@@ -14,7 +14,7 @@ class SVM():
         if load:
             self.model = self.load_parameters(None)
         else:
-            self.model = svm.NuSVC(gamma=0.02925, nu=0.3875, class_weight={0:0.7, 1:0.3}, probability=True)
+            self.model = svm.NuSVC(gamma=0.02925, nu=0.38, probability=True)
 
     # Trains model
     def train(self, X, Y):
