@@ -10,7 +10,7 @@ import numpy as np
 from imutils import face_utils
 
 from faceDetection.faceDetector import FaceDetection
-from utils.misc import get_face_coords
+from utils.face_detect_tools import get_face_coords
 
 landmarks = dlib.shape_predictor('/models/parameter_files/shape_predictor_68_face_landmarks.dat')
 
@@ -88,7 +88,7 @@ class ActiveSpeaker():
     def dense_optic_flow(self, face, face_region):
         '''
         Function to calculate Gunnar-Farneback Optical flow
-        
+
         Iterates through previous frames and computes mean flow for every 
         corresponding face in previous frames
 

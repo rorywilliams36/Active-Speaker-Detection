@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from dataLoader import Train_Loader, Test_Loader, extract_labels
 from asd import ActiveSpeaker
 from evaluation import face_evaluate
-from utils.misc import check_centres
+from utils.face_detect_tools import check_centres
 
 train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
 '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
