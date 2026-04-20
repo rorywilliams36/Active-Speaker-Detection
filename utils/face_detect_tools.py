@@ -1,6 +1,3 @@
-import cv2
-import pandas as pd
-import numpy as np
 
 def get_face_coords(face, h, w):
     # Gets coordinates of bounding box
