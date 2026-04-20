@@ -18,8 +18,6 @@ from evaluation import face_evaluate
 from utils.face_detect_tools import check_centres
 
 
-MODEL_PATH = '/parameter_files'
-
 def feature_extract(ids, root_dir, train, svm_check):
     '''
     Feature Extraction

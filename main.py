@@ -21,11 +21,11 @@ train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66
 '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
 '0f39OWEqJ24']
 
-test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']
+test_ids = ['4ZpjKfu6Cl8']# '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']
 
 obst_ids = ['4ZpjKfu6Cl8', 'HV0H6oc4Kvs', '1j20qq1JyX4', 'KHHgQ_Pe4cI', 'BCiuXAuCKAU']
 
-MODEL_PATH = '/parameter_files'
+MODEL_PATH = 'models/parameter_files'
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
