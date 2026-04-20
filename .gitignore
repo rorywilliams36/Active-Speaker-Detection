@@ -4,7 +4,7 @@ results/
 results.xlsx
 
 mark_files/
-models/
+models/parameter_files
 *.zip
 *.html
 *.pth
