@@ -1,3 +1,12 @@
+'''
+features.py
+
+Module to load frames as features by finding the locations of each face
+of each speaker in frame and organising it in a dict so that
+the face, optical flow and labels are all stored together
+
+'''
+
 import cv2
 import pandas as pd
 from torch import nn
@@ -27,10 +36,10 @@ def feature_extract(ids, root_dir, train, svm_check):
         ids: Array of video ids to be loaded
         root_dir: Path of dataset (training or testing)
         train: boolean indicating training/testing
+        svm_check: boolean to indicate svm being used
 
     Return:
         data: Dictionary storing features for relevant frame {ID, Timestamp, Flow, Faces, Label}
-
     '''
 
     data = {'Id' : [], 'Timestamp': [], 'Flow' : [], 'Faces' : [], 'Label' : []}
@@ -73,9 +82,12 @@ def feature_extract(ids, root_dir, train, svm_check):
  
     return data
 
-# Function ot update the previous frame dictionary (acts as a stack data structure)
-# Once at certain size the oldest item is removed and new item is added
+
 def update_prev_frames(prev_frames, frame, faces):
+    '''
+    Function to update the previous frame dictionary (acts as a stack data structure)
+    Once at certain size the oldest item is removed and new item is added
+    '''
     if len(prev_frames['Frame']) >= 5:
         _ = prev_frames['Frame'].pop(0)
         _ = prev_frames['Faces'].pop(0)
@@ -148,7 +160,7 @@ def organise_data(prediction, actual):
 
     return {'Timestamp' : actual[0], 'Flow' : flow, 'Face' : faces, 'Label' : labels}
 
-# Saves results from testing
 def save_results(data):
+    ''' Saves results from testing '''
     df = pd.DataFrame.from_dict(data)
     df.to_pickle('results.pkl')
