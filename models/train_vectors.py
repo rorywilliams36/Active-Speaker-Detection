@@ -1,3 +1,9 @@
+'''
+train_vectors.py
+
+Contains functions to train and test models
+'''
+
 import torch, copy
 import numpy as np
 from torch import nn
@@ -55,6 +61,16 @@ def train_model(data, model, save_path, epochs: int = 50, lr: float = 0.003):
 
 
 def train_validation(data, model, save_path, epochs: int=50, lr: float = 0.003, threshold: float = 0.25):
+    '''
+    Function to train model using validation set
+
+    Args:
+        data: dictionary containing feature vectors and labels
+        model: PyTorch object either MobileNetV3 Small or ShuffleNetV2
+        save_path: Path to file to save model parameters
+        epoch: Number of epochs to train for 
+        lr: Learning Rate for training
+    '''
     data_size = int(round(len(data['Flow'])*0.2))-1
     valid_data = {'Flow' : [], 'Label' : []}
     valid_data['Flow'] = data['Flow'][-data_size:]
