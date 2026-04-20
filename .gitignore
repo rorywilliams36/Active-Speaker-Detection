@@ -3,3 +3,10 @@ dataset/
 results/
 results.xlsx
 
+mark_files/
+models/
+*.zip
+*.html
+*.pth
+*.pkl
+*.csv
