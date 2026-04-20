@@ -157,7 +157,7 @@ def train_validation(data, model, save_path, epochs: int=50, lr: float = 0.003, 
         val_accuaracies.append(acc)
 
     try:
-        # torch.save(model.state_dict(), save_path)
+        torch.save(model.state_dict(), save_path)
         print('Model Saved')
     except:
         print('Error occured when saving model')
