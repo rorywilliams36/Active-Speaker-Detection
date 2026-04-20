@@ -9,7 +9,7 @@ the face, optical flow and labels are all stored together
 
 import cv2
 import pandas as pd
-from torch import nn
+import torch
 from torch.utils.data import DataLoader
 
 from dataLoader import Train_Loader, Test_Loader, extract_labels
@@ -17,13 +17,6 @@ from asd import ActiveSpeaker
 from evaluation import face_evaluate
 from utils.face_detect_tools import check_centres
 
-train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
-'20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
-'0f39OWEqJ24']
-
-test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']
-
-obst_ids = ['4ZpjKfu6Cl8', 'HV0H6oc4Kvs', '1j20qq1JyX4', 'KHHgQ_Pe4cI', 'BCiuXAuCKAU']
 
 MODEL_PATH = '/parameter_files'
 
