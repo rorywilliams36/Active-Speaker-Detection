@@ -10,9 +10,9 @@ import numpy as np
 from imutils import face_utils
 
 from faceDetection.faceDetector import FaceDetection
-from utils.face_detect_tools import get_face_coords
+from utils.face_detect_tools import get_face_coords, check_face
 
-landmarks = dlib.shape_predictor('/models/parameter_files/shape_predictor_68_face_landmarks.dat')
+landmarks = dlib.shape_predictor('models/parameter_files/shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
     def __init__(self, frame, prev_frames: dict = {'Frame' : [], 'Faces' : []}, svm: bool = False):
