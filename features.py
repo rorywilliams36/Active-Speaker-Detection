@@ -1,12 +1,12 @@
 import cv2
 import pandas as pd
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
-from sklearn.metrics import classification_report
+from torch.utils.data import DataLoader
 
 from dataLoader import Train_Loader, Test_Loader, extract_labels
 from asd import ActiveSpeaker
 from evaluation import face_evaluate
+from utils.misc import check_centres
 
 train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
 '20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
@@ -40,17 +40,17 @@ def feature_extract(ids, root_dir, train, svm_check):
         prev_frames = {'Frame' : [], 'Faces' : []}
         # Loads training or testing data
         if train:
-            dataLoader = Train_Loader(video_id, root_dir)
+            data_loader = Train_Loader(video_id, root_dir)
         else:
-            dataLoader = Test_Loader(video_id, root_dir)
+            data_loader = Test_Loader(video_id, root_dir)
 
-        dataLoaded = DataLoader(dataLoader, batch_size=64, num_workers=0, shuffle=False)
+        data_loaded = DataLoader(data_loader, batch_size=64, num_workers=0, shuffle=False)
 
-        for images, labels in dataLoaded:
-            for i in range(len(images)):
+        for images, labels in data_loaded:
+            for i, img in enumerate(images):
 
                 # Checks if there is multiple labels associated with frame
-                actual_label = extract_labels(dataLoader.labels, labels, i)
+                actual_label = extract_labels(data_loader.labels, labels, i)
                 # Feature Extraction
                 # Stores features in dict
                 asd = ActiveSpeaker(images[i], prev_frames=prev_frames, svm=svm_check)
@@ -138,7 +138,7 @@ def organise_data(prediction, actual):
     p_faces = prediction['Faces']
     for i in range(len(p_faces)):
         c = filter_faces(p_faces[i], actual)
-        if (prediction['Flow'][i] is not None) and (c != None):
+        if (prediction['Flow'][i] is not None) and (c is not None):
             flow.append(prediction['Flow'][i])
             faces.append(p_faces[i])
             if len(actual[1].shape) > 1:
