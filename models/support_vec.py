@@ -18,8 +18,14 @@ class SVM():
         else:
             self.model = svm.NuSVC(gamma=0.02925, nu=0.38, probability=True)
 
-    # Trains model
     def train(self, X, Y):
+        ''' 
+        Train model 
+        
+        Args:
+            X: predictions
+            Y: Correct Labels
+        '''
         # Checks data in correct shape
         if X.shape[0] == Y.shape[0]:
             print('\nTraining Starting...')
@@ -30,8 +36,8 @@ class SVM():
         print('Error during training. Data constructed incorrectly')
         quit()
 
-    # Tests model
     def test(self, X):
+        ''' Test Model '''
         print('Testing')
         Y = self.model.predict(X)
         return Y
@@ -39,8 +45,8 @@ class SVM():
     def evaluate(self, pred_y, test_y):
         return classification_report(pred_y, test_y)
 
-    # Function to save the parameters of the model
     def save_parameters(self, params):
+        ''' Saves parameters of a model'''
         try:
             with open(f"{PATH}/svm_parameters.pkl", 'wb') as file:
                 joblib.dump(params, file)
@@ -50,10 +56,8 @@ class SVM():
         except Exception as e:
             print(f'Error Saving Model: \n{e}')
 
-    # loads presaved model
     def load_parameters(self):
-        print('load params')
-        print(PATH)
+        ''' Loads the parameters of a presaved model '''
         try:
             with open(f"{PATH}/svm_parameters2.pkl", 'rb') as file:
                 params = joblib.load(file)
@@ -65,8 +69,8 @@ class SVM():
         except Exception as e:
             print(f'Error loading saved model. Train first or check path: \n{e}')
 
-    # Saves the training vector to a csv file
     def save_train_vector(self, train_data):
+        ''' Saves the training vector to a csv file '''
         try:
             df = pd.DataFrame.from_dict(train_Data)
             with open('train_vector.csv', 'wb') as file:
