@@ -62,9 +62,9 @@ def feature_extract(ids, root_dir, train, svm_check):
                 actual_label = extract_labels(data_loader.labels, labels, i)
                 # Feature Extraction
                 # Stores features in dict
-                asd = ActiveSpeaker(images[i], prev_frames=prev_frames, svm=svm_check)
+                asd = ActiveSpeaker(img, prev_frames=prev_frames, svm=svm_check)
                 prediction = asd.model()
-                prev_frames = update_prev_frames(prev_frames, images[i].numpy(), prediction['Faces'])
+                prev_frames = update_prev_frames(prev_frames, img.numpy(), prediction['Faces'])
 
                 # Filters out any features with a label associated
                 filtered = organise_data(prediction, actual_label)
