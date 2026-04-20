@@ -7,7 +7,7 @@ from faceDetection.faceDetector import FaceDetection
 from utils import tools
 from utils.misc import *
 
-landmarks = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+landmarks = dlib.shape_predictor('/models/parameter_files/shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
     def __init__(self, frame,

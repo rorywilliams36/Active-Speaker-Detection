@@ -8,6 +8,8 @@ from sklearn.pipeline import make_pipeline
 
 from scipy.stats import expon
 
+PATH = '/parameter_files'
+
 class SVM():
     def __init__(self, load):
         # If training skips to last clause, for testing a pre-saved model is used
@@ -40,7 +42,7 @@ class SVM():
     # Function to save the parameters of the model
     def save_parameters(self, params):
         try:
-            with open("svm_parameters.pkl", 'wb') as file:
+            with open(f"{PATH}/svm_parameters.pkl", 'wb') as file:
                 joblib.dump(params, file)
                 print('Model Saved')
         except:
@@ -54,7 +56,7 @@ class SVM():
                     params = joblib.load(file)
                     print('Model Loaded Successfully')
             else:
-                with open("svm_parameters.pkl", 'rb') as file:
+                with open(f"{PATH}/svm_parameters.pkl", 'rb') as file:
                     params = joblib.load(file)
                     print('Model Loaded Successfully')
 

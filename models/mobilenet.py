@@ -10,8 +10,6 @@ from torch import nn
 from torchvision.models import mobilenet_v3_small
 import torch.optim as optim
 
-PATH = 'mobilenet_model.pth'
-
 class MobileNet(nn.Module):
     def __init__(self, num_classes: int = 1, in_channels: int = 2):
         super().__init__()

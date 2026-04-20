@@ -24,6 +24,8 @@ test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1
 
 obst_ids = ['4ZpjKfu6Cl8', 'HV0H6oc4Kvs', '1j20qq1JyX4', 'KHHgQ_Pe4cI', 'BCiuXAuCKAU']
 
+MODEL_PATH = '/parameter_files'
+
 def main():
     parser = argparse.ArgumentParser(description = "Active Speaker Detection Program")
     parser.add_argument('--train', action='store_true', help="Perform training")
@@ -63,23 +65,25 @@ def main():
 
         if args.MobileNet:
             model = MobileNet()
+            mobile_model_file = f'{MODEL_PATH}/mobilenet_model.pth'
             if args.validate:
-                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, 'mobilenet_model.pth', args.epochs, args.lr, threshold=args.mobileThresh)
+                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, mobile_model_file, args.epochs, args.lr, threshold=args.mobileThresh)
                 if args.valLoss:
                     tools.plot_cross_validation(train_loss, valid_loss, args.epochs)
                     tools.plot_valid_acc(valid_accuracies, args.epochs)
             else:
-                pred_probs, loss = train_model(data, model, 'mobilenet_model.pth', args.epochs, args.lr)
+                pred_probs, loss = train_model(data, model, mobile_model_file, args.epochs, args.lr)
             
         if args.ShuffleNet:
-            model = ShuffleNet()
+            model = ShuffleNet()            
+            shuffle_model_file = f'{MODEL_PATH}/shufflenet_model.pth'
             if args.validate:
-                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, 'shufflenet_model.pth', args.epochs, args.lr, threshold=args.shuffleThresh)
+                pred_probs, train_loss, valid_loss, valid_accuracies = train_validation(data, model, shuffle_model_file, args.epochs, args.lr, threshold=args.shuffleThresh)
                 if args.valLoss:
                     tools.plot_cross_validation(train_loss, valid_loss, args.epochs)
                     tools.plot_valid_acc(valid_accuracies, args.epochs)
             else:
-                pred_probs, loss = train_model(data, model, 'shufflenet_model.pth', args.epochs, args.lr)
+                pred_probs, loss = train_model(data, model, shuffle_model_file, args.epochs, args.lr)
 
 
         if (args.ShuffleNet or args.MobileNet) and args.Loss:
@@ -101,11 +105,13 @@ def main():
 
         if args.MobileNet:
             model = MobileNet()
-            predictions, pred_probs = test_model(data['Flow'], model, load_path='mobilenet_model.pth', threshold=args.mobileThresh)
+            mobile_model_file = f'{MODEL_PATH}/mobilenet_model.pth'
+            predictions, pred_probs = test_model(data['Flow'], model, load_path=mobile_model_file, threshold=args.mobileThresh)
             
         if args.ShuffleNet:
             model = ShuffleNet()
-            predictions, pred_probs = test_model(data['Flow'], model, load_path='shufflenet_model.pth', threshold=args.shuffleThresh)
+            shuffle_model_file = f'{MODEL_PATH}/shufflenet_model.pth'
+            predictions, pred_probs = test_model(data['Flow'], model, load_path=shuffle_model_file, threshold=args.shuffleThresh)
         
         # Print Evaluations
         data['Pred'] = predictions
