@@ -1,15 +1,13 @@
+'''
+main.py
+Contains all arguments to run Active Speaker Detector
 
-import os, argparse, cv2
-import pandas as pd
+'''
+import argparse
 import numpy as np
-from torch import nn
-from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 
-from train import feature_extract, save_results
-from dataLoader import Train_Loader, Test_Loader, extract_labels
-from asd import ActiveSpeaker
+from features import feature_extract, save_results
 from models.support_vec import SVM
 from models.mobilenet import MobileNet
 from models.shuffle import ShuffleNet
@@ -17,6 +15,15 @@ from models.train_vectors import train_model, train_validation, test_model
 
 from evaluation import roc, svm_roc, conf_matrix
 from utils import tools
+
+
+train_ids = ['_mAfwH6i90E', 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
+'20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
+'0f39OWEqJ24']
+
+test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']
+
+obst_ids = ['4ZpjKfu6Cl8', 'HV0H6oc4Kvs', '1j20qq1JyX4', 'KHHgQ_Pe4cI', 'BCiuXAuCKAU']
 
 MODEL_PATH = '/parameter_files'
 
@@ -48,13 +55,13 @@ if __name__ == "__main__":
         # Get features and store them in dictionary
         data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True, svm_check=args.SVM)
         data['Label'] = np.array(data['Label']).flatten().astype(np.int64)
-        X_train = np.array(data['Flow'])
-        Y_train = data['Label']
+        x_train = np.array(data['Flow'])
+        y_train = data['Label']
 
         # Train relevant Model
         if args.SVM:
             svm = SVM(False)
-            model = svm.train(X_train, Y_train)
+            model = svm.train(x_train, y_train)
             svm.save_parameters(model)        
 
         if args.MobileNet:
@@ -107,10 +114,7 @@ if __name__ == "__main__":
             shuffle_model_file = f'{MODEL_PATH}/shufflenet_model.pth'
             predictions, pred_probs = test_model(data['Flow'], model, load_path=shuffle_model_file, threshold=args.shuffleThresh)
         
-        # Print Evaluations
-        data['Pred'] = predictions
-        print(classification_report(predictions, test_y))
-
+        # Results
         if args.saveResults:
             save_results(data)
 
@@ -123,3 +127,7 @@ if __name__ == "__main__":
 
             if args.MobileNet or args.ShuffleNet:
                 roc(X, test_y, pred_probs)
+
+        # Print results
+        data['Pred'] = predictions
+        print(classification_report(predictions, test_y))
