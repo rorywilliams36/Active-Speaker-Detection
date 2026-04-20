@@ -13,11 +13,19 @@ path = os.path.join(path, 'faceDetection/model')
 
 class FaceDetection():
     def __init__(self, frame, threshold: float = 0.2, model: str = 'res10_300x300_ssd_iter_140000.caffemodel'):
+        '''
+        Attributes:
+            frame: array containing pixels of the current frame
+            face_detector: face detection model
+             threshold: value to indicate whether face is confidently identified
+        '''
         self.frame = frame
         self.face_detector = cv2.dnn.readNetFromCaffe(f"{path}/deploy.prototxt.txt", f"{path}/{model}")
         self.threshold = threshold
 
     def detect(self):
+        ''' Returns numpy array containing bounding boxes for detected faces '''
+
         # Converts frame to blob and sends it to the model
         blob = cv2.dnn.blobFromImage(self.frame, 1.0, (300, 300), (104.0, 177.0, 123.0))
         self.face_detector.setInput(blob)
