@@ -1,17 +1,32 @@
-import cv2, dlib
-import pandas as pd
+'''
+asd.py
+
+Contains functions to calculate optical flow values between frames
+'''
+
+import cv2
+import dlib
 import numpy as np
 from imutils import face_utils
 
 from faceDetection.faceDetector import FaceDetection
-from utils import tools
-from utils.misc import *
+from utils.misc import get_face_coords
 
 landmarks = dlib.shape_predictor('/models/parameter_files/shape_predictor_68_face_landmarks.dat')
 
 class ActiveSpeaker():
-    def __init__(self, frame,
-                prev_frames: dict = {'Frame' : [], 'Faces' : []}, svm: bool = False):
+    def __init__(self, frame, prev_frames: dict = {'Frame' : [], 'Faces' : []}, svm: bool = False):
+        '''
+        Active Speaker class:
+        Contains relevant functions to calculate optical flow values on frames
+        and faces
+
+        Attriutes:
+            frame: numpy array for the current frame in video
+            prev_frame: dict containing the previous frames and locations of the faces in frame
+            svm: bool indicating if svm model is used
+        '''
+
         self.frame = frame.numpy()
         self.prev_frames = prev_frames
         self.svm = svm
@@ -25,7 +40,6 @@ class ActiveSpeaker():
         '''
         face_detect = FaceDetection(self.frame)
         faces = face_detect.detect()
-        img_diff = []
 
         predicted = {'Faces' : [], 'Flow' : [], 'Label' : []}
 
@@ -49,6 +63,8 @@ class ActiveSpeaker():
             flow_vector: Mean Optical flow calculated for the given face
         '''
 
+        flow_vector = None
+
         # Extracts and resizes the face detected from the frame
         h, w = self.frame.shape[:2]
         H = 128
@@ -57,7 +73,6 @@ class ActiveSpeaker():
         # Makes sure face detected is in the frame
         if x1 <= w and y1 <= h and x2 <= w and y1 <= h:
             face_region = cv2.resize(self.frame[y1:y2, x1:x2], (H,H))
-            gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
             # Apply dlib landmarks to face
             points = landmarks(self.frame, dlib.rectangle(x1, y1, x2, y2))
@@ -67,16 +82,15 @@ class ActiveSpeaker():
             if len(points) > 0:
                 flow_vector = self.dense_optic_flow(face, face_region)
 
-        try:
-            return flow_vector
-        except:
-            return None
+        return flow_vector
 
 
     def dense_optic_flow(self, face, face_region):
         '''
         Function to calculate Gunnar-Farneback Optical flow
-        Iterates through previous frames and computes mean flow for every corresponding face in previous frames
+        
+        Iterates through previous frames and computes mean flow for every 
+        corresponding face in previous frames
 
         Args:
             face: bounding box for the current face
@@ -90,12 +104,12 @@ class ActiveSpeaker():
         prev_face = None
         flows_hori = []
         flows_vert = []
-        rates = [1, 0.7, 0.5, 0.2, 0.1]
+        # rates = [1, 0.7, 0.5, 0.2, 0.1]
         all_flows = []
 
         num_previous = len(self.prev_frames['Frame'])
         if num_previous > 0:
-            rate_index = num_previous-1
+            # rate_index = num_previous-1
             for i in range(num_previous):
                 x1, y1, x2, y2 = get_face_coords(face, 300, 300)
                 prev_frame = self.prev_frames['Frame'][i]
@@ -117,9 +131,9 @@ class ActiveSpeaker():
                 current_face = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
 
                 # Gets dense optic flow values
-                flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, pyr_scale=0.5, levels=1, 
-                                                    winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
-
+                flow = cv2.calcOpticalFlowFarneback(prev_face, current_face, None, 
+                                                    pyr_scale=0.5, levels=1, winsize=15, 
+                                                    iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
 
                 all_flows.append(flow)
                 flow_vertical = flow[..., 1]
