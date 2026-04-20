@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, RocCurveDisplay, auc
 
-from utils.misc import check_centres
+from utils.face_detect_tools import check_centres
 
 
 def general_face_evaluation(prediction, actual):
