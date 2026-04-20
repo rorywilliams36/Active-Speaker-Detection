@@ -8,13 +8,13 @@ from sklearn.pipeline import make_pipeline
 
 from scipy.stats import expon
 
-PATH = '/parameter_files'
+PATH = 'models/parameter_files'
 
 class SVM():
     def __init__(self, load):
         # If training skips to last clause, for testing a pre-saved model is used
         if load:
-            self.model = self.load_parameters(None)
+            self.model = self.load_parameters()
         else:
             self.model = svm.NuSVC(gamma=0.02925, nu=0.38, probability=True)
 
@@ -45,25 +45,25 @@ class SVM():
             with open(f"{PATH}/svm_parameters.pkl", 'wb') as file:
                 joblib.dump(params, file)
                 print('Model Saved')
-        except:
-            print('Error occured when saving model')
+        except FileNotFoundError:
+            print('File not found')
+        except Exception as e:
+            print(f'Error Saving Model: \n{e}')
 
     # loads presaved model
-    def load_parameters(self, path):
+    def load_parameters(self):
+        print('load params')
+        print(PATH)
         try:
-            if path is not None:
-                with open(path, 'rb') as file:
-                    params = joblib.load(file)
-                    print('Model Loaded Successfully')
-            else:
-                with open(f"{PATH}/svm_parameters.pkl", 'rb') as file:
-                    params = joblib.load(file)
-                    print('Model Loaded Successfully')
-
+            with open(f"{PATH}/svm_parameters2.pkl", 'rb') as file:
+                params = joblib.load(file)
+                print('Model Loaded Successfully')
+                file.close()
             return params
-        except:
-            print('Error loading saved model. Train first or check path')
-            quit()
+        except FileNotFoundError:
+            print('File not found')
+        except Exception as e:
+            print(f'Error loading saved model. Train first or check path: \n{e}')
 
     # Saves the training vector to a csv file
     def save_train_vector(self, train_data):
@@ -71,6 +71,9 @@ class SVM():
             df = pd.DataFrame.from_dict(train_Data)
             with open('train_vector.csv', 'wb') as file:
                 df.to_csv(file, index=True)
+                file.close()
             print('Training Vector Saved')
-        except:
-            print('Error occured when saving training data')
+        except FileNotFoundError:
+            print('File not found')
+        except Exception as e:
+            print(f'Error Saving Vector: \n{e}')
