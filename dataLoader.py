@@ -1,3 +1,10 @@
+'''
+dataLoader.py
+
+Contains all functions for loading the frames and associating them
+with the corresponding data/labels from the csv files
+'''
+
 import os, cv2, torch, glob, re
 import pandas as pd
 import numpy as np 
@@ -15,7 +22,7 @@ TEST_LABELS = f'{current_path}/dataset/ava_activespeaker_test_v1.0/'
 class Train_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'train'):
         '''
-        Args:
+        Attributes:
             root_dir: directory holding the dataset
             data_path: path to data
             video_id: id of the video being loaded
@@ -30,13 +37,15 @@ class Train_Loader(Dataset):
         self.frames = sort_frames(self.data_path)
         self.labels = self.prep_labels()
 
-    # Returns number of items in dataset
     def __len__(self):
+        ''' Length of dataset'''
         return len(self.frames)
 
-    # Returns a certain point from dataset
-    # Gets a example image from dataset given a index
     def __getitem__(self, index):
+        '''
+        Returns a certain point from dataset
+        Gets a example image from dataset given a index
+        '''
         if torch.is_tensor(index):
             index = index.tolist()
             
@@ -61,9 +70,12 @@ class Train_Loader(Dataset):
         # Return frames and labels as tensors
         return torch.from_numpy(frame), convert_label_to_tensor(label)
 
-    # Since we are not using every frame from the data and only the first x frames
-    # Also intrduce columns for easier indexing
+
     def prep_labels(self):
+        '''
+        Since we are not using every frame from the data and only the first x frames
+        Also intrduce columns for easier indexing
+        '''
         # Read csv file and create columns
         labels_df = pd.read_csv(f'{TRAIN_LABELS}{self.video_id}-activespeaker.csv', header=None)
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
@@ -75,21 +87,25 @@ class Train_Loader(Dataset):
         return labels_df
 
     def extract_all(self, all_labels, current_labels, index):
+        ''' Returns np array for all labels for given timestamp '''
         timestamp = float(current_labels[0])
         pos_labels = np.array(all_labels.loc[all_labels['Timestamp'] == timestamp])
         return pos_labels
 
 class Test_Loader(Dataset):
     def __init__(self, video_id, root_dir: str = 'test'):
+        ''' Inherits attributes from Train_Loader '''
         Train_Loader.__init__(self, video_id, root_dir)
 
-    # Returns number of items in dataset
     def __len__(self):
+        ''' Length of dataset '''
         return len(self.frames)
 
-    # Returns a certain point from dataset
-    # Gets a example image from dataset given a index
     def __getitem__(self, index):
+        '''
+        Returns a certain point from dataset
+        Gets a example image from dataset given a index
+        '''
         if torch.is_tensor(index):
             index = index.tolist()
             
@@ -114,9 +130,12 @@ class Test_Loader(Dataset):
         # Return frames and labels as tensors
         return torch.from_numpy(frame), convert_label_to_tensor(label)
 
-        # Since we are not using every frame from the data and only the first x frames
-    # Also intrduce columns for easier indexing
+
     def prep_labels(self):
+        '''
+        Since we are not using every frame from the data and only the first x frames
+        Also intrduce columns for easier indexing
+        '''
         # Read csv file and create columns
         labels_df = pd.read_csv(f'{TEST_LABELS}{self.video_id}-activespeaker.csv', header=None)
         labels_df.columns = ['Video_ID', 'Timestamp', 'x1', 'y1', 'x2', 'y2', 'label', 'face_track_id']
@@ -127,8 +146,8 @@ class Test_Loader(Dataset):
 
         return labels_df
 
-# Transforms frame by applying gaussian blur, histogram eq and resizing
 def transform_frame(frame):
+    ''' Transforms frame by applying gaussian blur, histogram eq and resizing '''
     H = 300
     frame = cv2.GaussianBlur(frame, (5,5), 2.5)
     img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -137,8 +156,8 @@ def transform_frame(frame):
     frame = cv2.resize(frame, (H, H))
     return frame
 
-# Since frames can have multiple labels we convert the labels into a dict for pytorch to handle
 def create_labels_dict(labels):
+    ''' Since frames can have multiple labels we convert the labels into a dict for pytorch to handle '''
     label_dict = {}
     for label in labels:
         if label[0] not in label_dict:
@@ -148,10 +167,13 @@ def create_labels_dict(labels):
     
     return label_dict
 
-# Converts each label for the timestampS to tensor
-# Since labels contain the coordinates of the face speaking and the actual label
-# all values need to be of the same type
+
 def convert_label_to_tensor(label):
+    ''' 
+    Converts each label for the timestampS to tensor
+    Since labels contain the coordinates of the face speaking and the actual label
+    all values need to be of the same type 
+    '''
     label_tensors = {}
     label_list = list(label.items())
     labels = label_list[0][1]
@@ -163,9 +185,12 @@ def convert_label_to_tensor(label):
 
     return label_tensors
 
-# Since files are returned in arbitary order when loading the folder using glob we sort them by timestamp
-# Credit: https://stackoverflow.com/questions/4813061/non-alphanumeric-list-order-from-os-listdir/48030307#48030307
+
 def sort_frames(path):
+    '''
+    Since files are returned in arbitary order when loading the folder using glob we sort them by timestamp
+    Credit: https://stackoverflow.com/questions/4813061/non-alphanumeric-list-order-from-os-listdir/48030307#48030307 
+    '''
     frames = glob.glob(f"{path}/*.jpg")
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
@@ -179,14 +204,4 @@ def extract_labels(all_labels, current_labels, index):
         return timestamp, pos_labels[:, 1:5], pos_labels[:, -1]
 
     return current_labels['timestamp'][index], current_labels['bnd_box'][index], current_labels['label'][index]
-    
-if __name__ == "__main__":
-    ds = Train_Loader(video_id='_mAfwH6i90E', root_dir='_mAfwH6i90E')
-    # ds = Train_Loader(video_id='AYebXQ8eUkM', root_dir='AYebXQ8eUkM')
-    print(ds.frames)
-    # for i in range(len(ds.frames)):
-    #     _, labels = ds.__getitem__(i)
-    #     print(labels)
 
-    # show_labels(frame, label)
-    # print(ds.labels)
