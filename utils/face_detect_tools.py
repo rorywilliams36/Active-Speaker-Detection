@@ -1,6 +1,12 @@
+'''
+face_detect_tools.py
+
+Functions to check face bounding boxes and conversion of coordinates
+'''
+
 
 def get_face_coords(face, h, w):
-    # Gets coordinates of bounding box
+    ''' Gets coordinates of bounding box '''
     if len(face) > 4:
         x1, y1, x2, y2 = face[3:7] * h
     else:
@@ -14,11 +20,13 @@ def get_face_coords(face, h, w):
     return x1, y1, x2, y2
 
 def check_face(current, previous):
+    ''' Check bounding box is in a similar area to previous frame '''
     x1,y1,x2,y2 = current
     p_x1, p_y1, p_x2, p_y2 = previous
     return (x1 <= p_x2) and (x2 >= p_x1) and (y1 <= p_y2) and (y2 >= p_y1)
 
 def check_centres(prediction, actual):
+    ''' Check if two bounding boxes are in the same area '''
     x1, y1, x2, y2 = prediction * 300
     a_x1, a_y1, a_x2, a_y2 = actual * 300
     c_x, c_y = ((a_x1+a_x2)/2, (a_y1+a_y2)/2)
@@ -26,6 +34,7 @@ def check_centres(prediction, actual):
 
 
 def percent_overlap(prediction, actual):
+    ''' Calculates the overlap of two bounding boxes'''
     x1, y1, x2, y2 = prediction * 300
     a_x1, a_y1, a_x2, a_y2 = actual * 300
     # Get area of each bounding box
