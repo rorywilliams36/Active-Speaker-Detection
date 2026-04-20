@@ -1,3 +1,10 @@
+'''
+evalutaion.py 
+
+Contains calculates for evaluation metrics and
+also contains functions to get values for graphs
+'''
+
 import cv2, torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,19 +14,11 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_curve, 
 from utils.misc import check_centres
 
 
-'''
-Calculate Precision, Recall, F-Measure
-Calculate mAP
-
-Compare predicted labels with actual labels
-
-'''
-
 def general_face_evaluation(prediction, actual):
     '''
     Function to return whether face detected is correct
 
-    Params:
+    Args:
         prediction: array of faces detected
         actual: Annotations/labels for the frame
 
@@ -61,9 +60,9 @@ def general_face_evaluation(prediction, actual):
 
     return correct, total
 
-
-# Evaluation function for the prediction and actual label
 def evaluate(prediction, actual):
+    ''' Calculates the True Positive, False Positive, True Negative, False negative values for evaluations '''
+
     tp = 0
     fp = 0
     tn = 0
@@ -103,16 +102,20 @@ def evaluate(prediction, actual):
     return tp, fp, tn, fn
 
 
-# Evaluation for face detection
-# Since the coords for bound boxes are normalised we check if they contain the same centre coordinate
-# This is also because each bound box detected aren't exactly the same size/area
+
 def face_evaluate(prediction, actual):
+    ''' 
+    Evaluation for face detection
+    Since the coords for bound boxes are normalised we check if they contain the same centre coordinate
+    This is also because each bound box detected aren't exactly the same size/area 
+    '''
     x1, y1, x2, y2 = prediction * 300
     a_x1, a_y1, a_x2, a_y2 = actual * 300
     return (x1 <= a_x2) and (x2 >= a_x1) and (y1 <= a_y2) and (y2 >= a_y1)
 
 
 def percent_overlap(prediction, actual):
+    ''' Gets percent overlap between bounding boxes '''
     x1, y1, x2, y2 = prediction * 300
     a_x1, a_y1, a_x2, a_y2 = actual * 300
     # Get area of each bounding box
@@ -132,8 +135,8 @@ def percent_overlap(prediction, actual):
 
     return (inter / min(predicted_area, actual_area)) * 100
 
-# Function to compare the predicted label with the actual and update the metrics
 def label_eval(prediction, actual, counts):
+    ''' Function to compare the predicted label with the actual and update the metrics '''
     tp, fp, tn, fn = counts
     if prediction == actual:
         if prediction == 1:
@@ -148,8 +151,9 @@ def label_eval(prediction, actual, counts):
 
     return tp, fp, tn, fn
 
-# Calculates evaluation metrics from the give counts
 def metrics(counts):
+    ''' Calculates evaluation metrics from the give counts '''
+
     tp,fp,tn,fn = counts
 
     # Catch dividing by 0
@@ -171,11 +175,9 @@ def metrics(counts):
 
     return precision, recall, f_measure
 
-def mean_avg_precision():
-    pass
 
-# Calculates confusion matrix using seaborn
 def conf_matrix(Y_pred, Y_test):
+    ''' Calculates confusion matrix using seaborn '''
     matrix = confusion_matrix(Y_test, Y_pred, labels=[0, 1])
     print(matrix)
     sns.heatmap(matrix, annot=True, fmt="g", cbar=True, cmap='crest', xticklabels=['Not-Speaking', 'Speaking'], yticklabels=['Not-Speaking', 'Speaking'])
@@ -185,6 +187,7 @@ def conf_matrix(Y_pred, Y_test):
     plt.show()
 
 def svm_roc(X, Y, y_pred, model):
+    ''' Gets roc curve for SVM model '''
     probs = model.predict_proba(X)
     fpr, tpr, thresholds = roc_curve(Y, model.decision_function(X), pos_label=1)
     score = auc(fpr, tpr)
@@ -193,14 +196,15 @@ def svm_roc(X, Y, y_pred, model):
     plt.show()
 
 def roc(X, Y, y_pred):
+    ''' Gets roc curve '''
     fpr, tpr, thresholds = roc_curve(Y, y_pred, pos_label=1)
     score = auc(fpr, tpr)
     roc = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=score)
     roc.plot()
     plt.show()
 
-# Function to print results
 def display_results(title, counts, p, r, f):
+    ''' Prints results '''
     print(f'\n----------- {title} -----------')
     print('TP,FP,TN,FN: ',counts)
     print('Correct: ', counts[0]+counts[2])
@@ -208,8 +212,8 @@ def display_results(title, counts, p, r, f):
     print('Recall: ', r)
     print('F-Measure: ', f)
 
-# Function to present results
 def display_evaluate(counts, total):
+    ''' Prints evaluation metrics '''
     p, r, fm = metrics(counts)
     non_p, non_r, non_fm = metrics([counts[2], counts[3], counts[0], counts[1]])
 
