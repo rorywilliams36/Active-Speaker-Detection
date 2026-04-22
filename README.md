@@ -7,6 +7,8 @@ The detector uses Optical Flow to measure the movement in the speaker's face by 
   
 Unfortunately there are issues with the features as the models are unreliable at differentiating between speakers and non-speakers due to the feature values being too similar therefore, it generally can correctly identify speakers 55\% of the time
 
+---  
+
 ### Preparing the Dataset 
 Dataset used is the [AVA-ActiveSpeaker Dataset](https://arxiv.org/abs/1901.01342) by Roth et al   
 
@@ -33,7 +35,7 @@ Videos used:
  
 `test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']`
 
-
+---  
 
 ### Usage
 
@@ -52,6 +54,8 @@ These options are only available when training
 `python main.py --test --{SVM, MobileNet, ShuffleNet} {--confMatrix} {--roc}`  
 
 Additionally you can save results using the relevant arguement
+
+---  
  
 ### Relevant Files/Folders
 
@@ -67,6 +71,8 @@ Additionally you can save results using the relevant arguement
 Other files:  
 - Juptyer Notebook `face_eval.ipynb` is used to perform evaluation and experimentation on the face detector
 - `/utils` folder contains other useful tools for creating graphs, dataset preparation and some face detection methods   
+
+---  
 
 ### Liscense
 This project is under the MIT Liscense
