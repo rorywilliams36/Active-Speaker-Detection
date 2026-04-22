@@ -8,7 +8,9 @@ The detector uses Optical Flow to measure the movement in the speaker's face y c
 Unfortunately there are issues with the features as the models are unreliable are differentiating between speakers and non-speakers due to the feature values being too similar therefore it generally can correctly identify speakers 55\% of the time
 
 ### Preparing the Dataset 
-Dataset used is the [AVA-ActiveSpeaker Dataset]() by Roth et al  
+Dataset used is the [AVA-ActiveSpeaker Dataset](https://arxiv.org/abs/1901.01342) by Roth et al   
+
+The dataset can be downloaded [here](https://github.com/okankop/ASDNet) or [here](https://research.google.com/ava/download.html)
   
 To prepare in the dataset folder have a train and test folder each containing other folders named after the video ids that contain frames from that video as images with the title of `videoID_timstamp.jpg` (e.g `_mAfwH6i90E_906.0.jpg`)  
 The frames are stored in folders named after the video id e.g (`_mAfwH6i90E/_mAfwH6i90E_906.0.jpg`)  
