@@ -158,6 +158,7 @@ def save_results(data):
     df.to_pickle('results.pkl')
 
 def save_features(data):
+    ''' Saves features (data) dict as npz file '''
     try:
         np.savez_compressed(
             "feature_data/features.npz", 
@@ -172,6 +173,7 @@ def save_features(data):
         print(f'Error saving feature data: \n{e}')
 
 def load_features():
+    ''' Loads feature data from file and returns it as dict '''
     feature_data = None
     try:
         feature_data = dict(np.load('feature_data/features.npz'))

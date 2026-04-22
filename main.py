@@ -54,11 +54,9 @@ if __name__ == "__main__":
 
     # Training
     if args.train or args.validate:
-        # Get features and store them in dictionary
-        if args.save_features:
-            data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True, svm_check=args.SVM)
-            save_features(data)
-        elif args.load_features:
+
+        # Load features if presaved
+        if args.load_features:
             data = load_features()
             if (data is None) or not (len(data.keys()) > 0 and any(data[k].size > 0 for k in data.keys())):
                 print('''
@@ -66,8 +64,12 @@ if __name__ == "__main__":
                 Please rerun with the --save_Features option
                 ''')
         else:
+            # Get features and save if arg is selected
             data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True, svm_check=args.SVM)
+            if args.save_features:
+                save_features(data)
 
+        # Format Features
         data['Label'] = np.array(data['Label']).flatten().astype(np.int64)
         x_train = np.array(data['Flow'])
         y_train = data['Label']
