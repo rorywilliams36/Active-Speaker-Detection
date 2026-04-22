@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 from sklearn.metrics import classification_report
 
-from features import feature_extract, save_results
+from features import feature_extract, save_results, save_features, load_features
 from models.support_vec import SVM
 from models.mobilenet import MobileNet
 from models.shuffle import ShuffleNet
@@ -17,9 +17,9 @@ from evaluation import roc, svm_roc, conf_matrix
 from utils import tools
 
 
-train_ids = ['_mAfwH6i90E' , 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
-'20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
-'0f39OWEqJ24']
+train_ids = ['_mAfwH6i90E']#, 'B1MAUxpKaV8', '7nHkh4sP5Ks', '2PpxiG0WU18', '-5KQ66BBWC4', '5YPjcdLbs5g',
+#'20TAGRElvfE', 'Db19rWN5BGo', 'rFgb2ECMcrY', 'N0Dt9i9IUNg', '8aMv-ZGD4ic', 'Ekwy7wzLfjc', 
+#'0f39OWEqJ24']
 
 test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']
 
@@ -36,6 +36,8 @@ if __name__ == "__main__":
     parser.add_argument('--roc', action='store_true',  required=False, help="Plot ROC curve from testing")
     parser.add_argument('--trainDataPath', type=str, default='train', required=False, help="Data path for the training dataset")
     parser.add_argument('--testDataPath', type=str, default='test', required=False, help="Data path for the testing dataset")
+    parser.add_argument('--save_features', action='store_true', help="Stores feature data for easy access (recommended for training)")
+    parser.add_argument('--load_features', action='store_true', help="Loads the presaved feature data (only used for training)")
     parser.add_argument('--saveResults',  action='store_true', required=False, help='Save results from testing')
 
     parser.add_argument('--SVM', action='store_true', required=False, help='Selects Support Vector Machine to be used as classifer')
@@ -53,7 +55,19 @@ if __name__ == "__main__":
     # Training
     if args.train or args.validate:
         # Get features and store them in dictionary
-        data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True, svm_check=args.SVM)
+        if args.save_features:
+            data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True, svm_check=args.SVM)
+            save_features(data)
+        elif args.load_features:
+            data = load_features()
+            if (data is None) or not (len(data.keys()) > 0 and any(data[k].size > 0 for k in data.keys())):
+                print('''
+                Loaded features has no content
+                Please rerun with the --save_Features option
+                ''')
+        else:
+            data = feature_extract(ids=train_ids, root_dir=args.trainDataPath, train=True, svm_check=args.SVM)
+
         data['Label'] = np.array(data['Label']).flatten().astype(np.int64)
         x_train = np.array(data['Flow'])
         y_train = data['Label']

@@ -9,6 +9,7 @@ the face, optical flow and labels are all stored together
 
 import cv2
 import pandas as pd
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
@@ -155,3 +156,25 @@ def save_results(data):
     ''' Saves results from testing '''
     df = pd.DataFrame.from_dict(data)
     df.to_pickle('results.pkl')
+
+def save_features(data):
+    try:
+        np.savez_compressed(
+            "feature_data/features.npz", 
+            Id = data['Id'],
+            Timestamp = data['Timestamp'],
+            Flow = data['Flow'],
+            Faces = data['Faces'],
+            Label = data['Label']
+        )
+        print('Feature data saved successfully')
+    except Exception as e:
+        print(f'Error saving feature data: \n{e}')
+
+def load_features():
+    feature_data = None
+    try:
+        feature_data = dict(np.load('feature_data/features.npz'))
+    except Exception as e:
+        print(f'Error loading feature data: \n{e}')
+    return feature_data
