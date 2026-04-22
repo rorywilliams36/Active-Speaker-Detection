@@ -75,4 +75,4 @@ Other files:
 ---  
 
 ### Liscense
-This project is under the MIT Liscense
+This project is under the MIT License
