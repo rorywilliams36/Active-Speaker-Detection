@@ -10,3 +10,4 @@ models/parameter_files
 *.pth
 *.pkl
 *.csv
+*.npz
