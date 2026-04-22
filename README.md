@@ -33,18 +33,22 @@ Videos used:
  
 `test_ids = ['4ZpjKfu6Cl8', '2qQs3Y9OJX0', 'HV0H6oc4Kvs', 'rJKeqfTlAeY', '1j20qq1JyX4', 'C25wkwAMB-w']`
 
-### Running Code
-To run the code:
 
-Training:
+
+### Usage
+
+First clone repo and install requirements: `pip install -r requirements.txt`   
+
+#### Training:
 `python main.py --{train, validate} --{SVM, MobileNet, ShuffleNet}`  
 Validate will evaluate the model on the validation set after each training epoch (only to be used with MobileNet or ShuffleNet)  
 There are additionally more arguements to change epochs, learning rate and to display loss functions and cross-validation loss
 
 There is option to save the feature data using `--save_features` and loading it again using `--load_features` to save time during training.  
+You may have to create an empty folder `feature_data/` in the main project directory to avoid errors.   
 These options are only available when training
   
-Testing: 
+#### Testing: 
 `python main.py --test --{SVM, MobileNet, ShuffleNet} {--confMatrix} {--roc}`  
 
 Additionally you can save results using the relevant arguement
@@ -60,5 +64,9 @@ Additionally you can save results using the relevant arguement
 - `support_vec.py` code for training and testing the SVM
 - This folder also contains `/parameter_files` folder that contains all parameters for the models, you may have to create this folder to avoid errors.
 
-#### Other Files
-Juptyer Notebook `face_eval.ipynb` is used to perform evaluation and experimentation on the face detector
+Other files:  
+- Juptyer Notebook `face_eval.ipynb` is used to perform evaluation and experimentation on the face detector
+- `/utils` folder contains other useful tools for creating graphs, dataset preparation and some face detection methods   
+
+### Liscense
+This project is under the MIT Liscense
